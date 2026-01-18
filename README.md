@@ -190,6 +190,9 @@ lockin 90              # 90-minute deep work
 lockin break short     # Short break (from config)
 lockin break long      # Long break (from config)
 lockin break 10        # Custom 10-minute break
+
+# End session without attaching
+lockin quit            # or: lockin stop
 ```
 
 ### Viewing & Tracking

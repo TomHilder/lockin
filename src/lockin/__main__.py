@@ -60,6 +60,7 @@ Examples:
   lockin break 5      # Start 5-minute break
   lockin break short  # Start short break (from config)
   lockin break long   # Start long break (from config)
+  lockin quit         # End current session without attaching
   lockin stats week   # Show this week's stats
   lockin config       # Show configuration
         """
@@ -130,7 +131,17 @@ Examples:
                 console.print(f"[red]Error: {e}[/red]")
                 console.print(f"[dim]Valid keys: {', '.join(sorted(config.get_all().keys()))}[/dim]")
         return
-    
+
+    # Quit command
+    if args.duration in ['quit', 'stop']:
+        if not state or state['session_state'] in ['idle', 'ended']:
+            console.print("[yellow]No active session[/yellow]")
+            return
+        ui.queue_command('quit_session')
+        session_type = state['session_type'].capitalize()
+        console.print(f"[green]{session_type} session ended[/green]")
+        return
+
     # Break command
     if args.duration == 'break':
         if not args.break_duration:
