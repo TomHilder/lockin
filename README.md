@@ -192,7 +192,8 @@ lockin break long      # Long break (from config)
 lockin break 10        # Custom 10-minute break
 
 # End session without attaching
-lockin quit            # or: lockin stop
+lockin quit            # Only if past threshold (5 min work, 2 min break)
+lockin quit --scrap    # Force quit regardless of time
 ```
 
 ### Viewing & Tracking

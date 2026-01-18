@@ -60,7 +60,8 @@ Examples:
   lockin break 5      # Start 5-minute break
   lockin break short  # Start short break (from config)
   lockin break long   # Start long break (from config)
-  lockin quit         # End current session without attaching
+  lockin quit         # End session (if past threshold)
+  lockin quit --scrap # Force end session
   lockin stats week   # Show this week's stats
   lockin config       # Show configuration
         """
@@ -72,7 +73,9 @@ Examples:
                        help='Break duration in minutes, "short", or "long"')
     parser.add_argument('date', nargs='?', type=str,
                        help='Date for stats (DDMMYY for week/month, YYYY for year)')
-    
+    parser.add_argument('--scrap', action='store_true',
+                       help='Force quit session even if below minimum threshold')
+
     args = parser.parse_args()
 
     # Check if engine is running
@@ -133,13 +136,29 @@ Examples:
         return
 
     # Quit command
-    if args.duration in ['quit', 'stop']:
+    if args.duration == 'quit':
         if not state or state['session_state'] in ['idle', 'ended']:
             console.print("[yellow]No active session[/yellow]")
             return
+
+        session_type = state['session_type']
+        elapsed_minutes = (time.time() - state['start_time']) / 60
+        config = Config(ui.db)
+
+        # Check if past minimum threshold (unless --scrap)
+        if not args.scrap:
+            if session_type == 'work':
+                threshold = config.abandon_threshold_minutes
+            else:
+                threshold = config.break_scrap_threshold_minutes
+
+            if elapsed_minutes < threshold:
+                console.print(f"[yellow]Session only {elapsed_minutes:.1f} min old (threshold: {threshold} min)[/yellow]")
+                console.print("Use [cyan]lockin quit --scrap[/cyan] to force quit")
+                return
+
         ui.queue_command('quit_session')
-        session_type = state['session_type'].capitalize()
-        console.print(f"[green]{session_type} session ended[/green]")
+        console.print(f"[green]{session_type.capitalize()} session ended[/green]")
         return
 
     # Break command
