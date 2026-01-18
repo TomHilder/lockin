@@ -158,10 +158,17 @@ Examples:
         
         # Check if session already running
         if state and state['session_state'] not in ['idle', 'ended']:
-            console.print("[yellow]A session is already running[/yellow]")
-            console.print("Quit it first with [cyan]q[/cyan] in the session view")
-            return
-        
+            # Allow starting a break if work session is in decision/bonus state
+            # (mirrors pressing 'b' in the interactive UI)
+            if (state['session_type'] == 'work' and
+                state['session_state'] in ['awaiting_decision', 'running_bonus']):
+                ui.queue_command('quit_session')
+                time.sleep(0.5)  # Wait for quit to process
+            else:
+                console.print("[yellow]A session is already running[/yellow]")
+                console.print("Quit it first with [cyan]q[/cyan] in the session view")
+                return
+
         ui.queue_command('start_session', session_type='break', duration_minutes=duration)
         console.print(f"[green]Started {duration}-minute break[/green]")
         if config.auto_attach:
