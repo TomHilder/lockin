@@ -259,21 +259,36 @@ class LockinUI:
         else:
             console.print("[dim]\\[q] end break   \\[d] detach[/dim]")
 
-    def attach_to_session(self):
-        """Attach to running session with live updates."""
+    def attach_to_session(self, wait_for_session: bool = False):
+        """Attach to running session with live updates.
+
+        Args:
+            wait_for_session: If True, wait up to 3 seconds for session to start
+        """
         import select
         import termios
         import tty
-        
+
+        # If waiting for session to start, poll until it's active
+        if wait_for_session:
+            for _ in range(30):  # Up to 3 seconds
+                state = self.get_current_state()
+                if state and state['session_state'] not in [SessionState.IDLE, SessionState.ENDED]:
+                    break
+                time.sleep(0.1)
+            else:
+                console.print("[yellow]Session failed to start[/yellow]")
+                return
+
         # Set terminal to raw mode for immediate key detection
         old_settings = termios.tcgetattr(sys.stdin)
-        
+
         try:
             tty.setcbreak(sys.stdin.fileno())
-            
+
             while True:
                 state = self.get_current_state()
-                
+
                 if not state or state['session_state'] in [SessionState.IDLE, SessionState.ENDED]:
                     console.print("\n[yellow]Session ended[/yellow]")
                     break

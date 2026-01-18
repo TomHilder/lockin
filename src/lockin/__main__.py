@@ -172,8 +172,7 @@ Examples:
         ui.queue_command('start_session', session_type='break', duration_minutes=duration)
         console.print(f"[green]Started {duration}-minute break[/green]")
         if config.auto_attach:
-            time.sleep(0.3)  # Brief delay to let engine process command
-            ui.attach_to_session()
+            ui.attach_to_session(wait_for_session=True)
         else:
             console.print("Attach with: [cyan]lockin[/cyan]")
         return
@@ -202,8 +201,7 @@ Examples:
     console.print(f"[green]Started {duration}-minute work session[/green]")
     config = Config(ui.db)
     if config.auto_attach:
-        time.sleep(0.3)  # Brief delay to let engine process command
-        ui.attach_to_session()
+        ui.attach_to_session(wait_for_session=True)
     else:
         console.print("Attach with: [cyan]lockin[/cyan]")
 
