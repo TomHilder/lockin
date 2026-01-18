@@ -193,7 +193,12 @@ class LockinUI:
                     else:
                         console.print("[dim]\\[q] quit (end early)   \\[d] detach[/dim]")
                 else:  # Break
-                    console.print("[dim]\\[q] end break   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]")
+                    break_threshold = self.config.break_scrap_threshold_minutes
+                    elapsed_minutes = elapsed / 60
+                    if elapsed_minutes < break_threshold:
+                        console.print("[dim]\\[q] end (scrap)   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]")
+                    else:
+                        console.print("[dim]\\[q] end break   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]")
             elif session_state == SessionState.RUNNING_BONUS:
                 if session_type == SessionType.WORK:
                     console.print("[dim]\\[q] quit (end)   \\[b/B] break (short/custom)   \\[d] detach[/dim]")
@@ -306,6 +311,24 @@ class LockinUI:
                     if key == 'q':
                         self.queue_command('quit_session')
                         time.sleep(0.5)  # Wait for processing
+                        # Show appropriate message
+                        elapsed_minutes = (time.time() - state['start_time']) / 60
+                        if session_type == SessionType.WORK:
+                            threshold = self.config.abandon_threshold_minutes
+                            if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                                console.print("\n[green]Work session completed[/green]")
+                            elif elapsed_minutes < threshold:
+                                console.print("\n[yellow]Work session scrapped (not logged)[/yellow]")
+                            else:
+                                console.print("\n[green]Work session ended early (logged)[/green]")
+                        else:  # Break
+                            threshold = self.config.break_scrap_threshold_minutes
+                            if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                                console.print("\n[green]Break completed[/green]")
+                            elif elapsed_minutes < threshold:
+                                console.print("\n[yellow]Break scrapped (not logged)[/yellow]")
+                            else:
+                                console.print("\n[green]Break ended (logged)[/green]")
                         break
                     elif key == 'd':
                         console.print("\n[dim]Detached. Session continues in background.[/dim]")
