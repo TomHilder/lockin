@@ -189,17 +189,18 @@ class LockinUI:
                     abandon_threshold_minutes = self.config.abandon_threshold_minutes
                     elapsed_minutes = elapsed / 60
                     if elapsed_minutes < abandon_threshold_minutes:
-                        console.print("[dim][q] quit (scrap)   [d] detach[/dim]")
+                        console.print("[dim]\\[q] quit (scrap)   \\[d] detach[/dim]")
                     else:
-                        console.print("[dim][q] quit (end early)   [d] detach[/dim]")
+                        console.print("[dim]\\[q] quit (end early)   \\[d] detach[/dim]")
                 else:  # Break
-                    console.print("[dim][q] end break   [s] switch to short   [l] switch to long   [d] detach[/dim]")
+                    console.print("[dim]\\[q] end break   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]")
             elif session_state == SessionState.RUNNING_BONUS:
                 if session_type == SessionType.WORK:
-                    console.print("[dim][q] quit (end)   [b/B] break (short/custom)   [d] detach[/dim]")
+                    console.print("[dim]\\[q] quit (end)   \\[b/B] break (short/custom)   \\[d] detach[/dim]")
                 else:
-                    console.print("[dim][q] end break   [d] detach[/dim]")
-    
+                    console.print("[dim]\\[q] end break   \\[d] detach[/dim]")
+            console.print()  # Extra newline before cursor
+
     def _prompt_custom_break_duration(self, old_settings) -> Optional[int]:
         """Prompt user for custom break duration. Returns duration in minutes or None if cancelled."""
         import termios
@@ -247,7 +248,7 @@ class LockinUI:
             else:
                 break_label = "short"
             
-            console.print(f"[dim][q] quit (end)   [b/B] break ({break_label}/custom)   [c] continue   [d] detach[/dim]")
+            console.print(f"[dim]\\[q] quit (end)   \\[b/B] break ({break_label}/custom)   \\[c] continue   \\[d] detach[/dim]")
             
             # Show countdown
             now = time.time()
@@ -256,8 +257,8 @@ class LockinUI:
             remaining = max(0, decision_window - (now - decision_start))
             console.print(f"[dim]Defaulting to continue in {format_time_remaining(remaining)}[/dim]")
         else:
-            console.print("[dim][q] end break   [d] detach[/dim]")
-    
+            console.print("[dim]\\[q] end break   \\[d] detach[/dim]")
+
     def attach_to_session(self):
         """Attach to running session with live updates."""
         import select
@@ -476,7 +477,7 @@ class LockinUI:
                         daily_stats[day_key]['sessions'] += 1
             
             # Display bar chart
-            max_minutes = max([d['work'] for d in daily_stats.values()]) if daily_stats else 1
+            max_minutes = max(120, max([d['work'] for d in daily_stats.values()])) if daily_stats else 120
             
             for day_key in sorted(daily_stats.keys()):
                 stats = daily_stats[day_key]
@@ -524,7 +525,7 @@ class LockinUI:
                         weekly_stats[week_key]['sessions'] += 1
             
             # Display bar chart
-            max_minutes = max([d['work'] for d in weekly_stats.values()]) if weekly_stats else 1
+            max_minutes = max(120, max([d['work'] for d in weekly_stats.values()])) if weekly_stats else 120
             
             for week_key in sorted(weekly_stats.keys()):
                 stats = weekly_stats[week_key]
