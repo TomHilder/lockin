@@ -1,12 +1,10 @@
 """Main entry point for Lockin CLI."""
 
-import sys
 import argparse
 from pathlib import Path
 
 from .cli import LockinUI, console
 from .config import Config
-from .database import Database
 
 
 def get_data_dir() -> Path:

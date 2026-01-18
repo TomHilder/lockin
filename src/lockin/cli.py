@@ -8,11 +8,8 @@ from typing import Optional
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, BarColumn, TextColumn
 from rich.table import Table
-from rich.layout import Layout
 from rich import box
-from rich.text import Text
 
 from .database import Database
 from .config import Config
@@ -242,8 +239,6 @@ class LockinUI:
         session_type = state['session_type']
         
         if session_type == SessionType.WORK:
-            # Get recommended break
-            recommended = self.db.get_engine_state()  # This is a hack, should call engine method
             streak = self.db.calculate_current_streak()
             long_break_every = self.config.long_break_every
             
@@ -261,7 +256,7 @@ class LockinUI:
             remaining = max(0, decision_window - (now - decision_start))
             console.print(f"[dim]Defaulting to continue in {format_time_remaining(remaining)}[/dim]")
         else:
-            console.print(f"[dim][q] end break   [d] detach[/dim]")
+            console.print("[dim][q] end break   [d] detach[/dim]")
     
     def attach_to_session(self):
         """Attach to running session with live updates."""
@@ -350,7 +345,7 @@ class LockinUI:
                     # Parse DDMMYY
                     try:
                         ref_date = datetime.strptime(date_arg, '%d%m%y')
-                    except ValueError as e:
+                    except ValueError:
                         console.print(f"[red]Invalid date format: {date_arg}[/red]")
                         console.print("[dim]Expected format: DDMMYY (e.g., 150124 for Jan 15, 2024)[/dim]")
                         return
@@ -367,7 +362,7 @@ class LockinUI:
                 if date_arg:
                     try:
                         ref_date = datetime.strptime(date_arg, '%d%m%y')
-                    except ValueError as e:
+                    except ValueError:
                         console.print(f"[red]Invalid date format: {date_arg}[/red]")
                         console.print("[dim]Expected format: DDMMYY (e.g., 150124 for Jan 15, 2024)[/dim]")
                         return
@@ -388,7 +383,7 @@ class LockinUI:
                         year = int(date_arg)
                         if year < 1900 or year > 9999:
                             raise ValueError("Year out of range")
-                    except ValueError as e:
+                    except ValueError:
                         console.print(f"[red]Invalid year: {date_arg}[/red]")
                         console.print("[dim]Expected format: YYYY (e.g., 2024)[/dim]")
                         return

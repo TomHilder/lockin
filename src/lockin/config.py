@@ -1,7 +1,6 @@
 """Configuration management for Lockin."""
 
 from typing import Any, Dict
-from pathlib import Path
 from .database import Database
 
 
