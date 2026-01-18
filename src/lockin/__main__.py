@@ -8,8 +8,9 @@ from .cli import LockinUI, console
 from .config import Config
 
 
-def is_engine_running() -> bool:
-    """Check if the engine LaunchAgent is loaded."""
+def is_engine_running(db) -> bool:
+    """Check if engine is running (LaunchAgent or manual)."""
+    # Check LaunchAgent
     try:
         result = subprocess.run(
             ['launchctl', 'list'],
@@ -17,9 +18,19 @@ def is_engine_running() -> bool:
             text=True,
             timeout=5
         )
-        return 'com.lockin.engine' in result.stdout
+        if 'com.lockin.engine' in result.stdout:
+            return True
     except Exception:
-        return False
+        pass
+
+    # Check if engine_state was updated recently (manual run)
+    import time
+    with db.connection() as conn:
+        cursor = conn.execute("SELECT updated_at FROM engine_state WHERE id = 1")
+        row = cursor.fetchone()
+        if row and row['updated_at']:
+            return (time.time() - row['updated_at']) < 10
+    return False
 
 
 def get_data_dir() -> Path:
@@ -65,7 +76,7 @@ Examples:
 
     # Check if engine is running
     state = ui.get_current_state()
-    engine_running = is_engine_running()
+    engine_running = is_engine_running(ui.db)
 
     if not engine_running:
         console.print("[yellow]Warning:[/yellow] Lockin engine not running")
