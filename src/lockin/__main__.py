@@ -2,6 +2,7 @@
 
 import argparse
 import subprocess
+import time
 from pathlib import Path
 
 from .cli import LockinUI, console
@@ -24,7 +25,6 @@ def is_engine_running(db) -> bool:
         pass
 
     # Check if engine_state was updated recently (manual run)
-    import time
     with db.connection() as conn:
         cursor = conn.execute("SELECT updated_at FROM engine_state WHERE id = 1")
         row = cursor.fetchone()
@@ -164,7 +164,11 @@ Examples:
         
         ui.queue_command('start_session', session_type='break', duration_minutes=duration)
         console.print(f"[green]Started {duration}-minute break[/green]")
-        console.print("Attach with: [cyan]lockin[/cyan]")
+        if config.auto_attach:
+            time.sleep(0.3)  # Brief delay to let engine process command
+            ui.attach_to_session()
+        else:
+            console.print("Attach with: [cyan]lockin[/cyan]")
         return
     
     # Work session (numeric duration)
@@ -189,7 +193,12 @@ Examples:
     
     ui.queue_command('start_session', session_type='work', duration_minutes=duration)
     console.print(f"[green]Started {duration}-minute work session[/green]")
-    console.print("Attach with: [cyan]lockin[/cyan]")
+    config = Config(ui.db)
+    if config.auto_attach:
+        time.sleep(0.3)  # Brief delay to let engine process command
+        ui.attach_to_session()
+    else:
+        console.print("Attach with: [cyan]lockin[/cyan]")
 
 
 if __name__ == '__main__':

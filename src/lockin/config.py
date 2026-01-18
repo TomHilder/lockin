@@ -11,6 +11,7 @@ DEFAULT_CONFIG = {
     'abandon_threshold_minutes': 5,  # Min time to count as abandoned vs scrapped
     'break_scrap_threshold_minutes': 2,  # Min break time to log
     'decision_window_minutes': 3,  # Time to decide after session completes
+    'auto_attach': False,  # Automatically attach to session after starting
 }
 
 
@@ -40,14 +41,30 @@ class Config:
         # Validate key exists
         if key not in DEFAULT_CONFIG:
             raise ValueError(f"Unknown configuration key: {key}")
-        
+
+        default_value = DEFAULT_CONFIG[key]
+
+        # Handle boolean config values
+        if isinstance(default_value, bool):
+            if isinstance(value, bool):
+                pass  # Already a bool
+            elif isinstance(value, str):
+                if value.lower() in ('true', '1', 'yes', 'on'):
+                    value = True
+                elif value.lower() in ('false', '0', 'no', 'off'):
+                    value = False
+                else:
+                    raise ValueError(f"{key} must be true or false")
+            else:
+                raise ValueError(f"{key} must be true or false")
+
         # Validate that numeric values are positive and reasonable
-        if key in DEFAULT_CONFIG and isinstance(DEFAULT_CONFIG[key], (int, float)):
+        elif isinstance(default_value, (int, float)):
             try:
                 num_value = float(value)
                 if num_value <= 0:
                     raise ValueError(f"{key} must be positive")
-                
+
                 # Set reasonable maximums
                 if key.endswith('_minutes'):
                     if num_value > 1440:  # 24 hours
@@ -55,7 +72,7 @@ class Config:
                 elif key.endswith('_every'):
                     if num_value > 100:
                         raise ValueError(f"{key} cannot exceed 100")
-                
+
                 if key.endswith('_every'):
                     value = int(num_value)
                 else:
@@ -64,7 +81,7 @@ class Config:
                 if "cannot exceed" in str(e) or "must be positive" in str(e) or "Unknown configuration" in str(e):
                     raise
                 raise ValueError(f"Invalid value for {key}: {value}")
-        
+
         self.db.set_config(key, value)
     
     def get_all(self) -> Dict[str, Any]:
@@ -101,3 +118,7 @@ class Config:
     @property
     def decision_window_minutes(self) -> int:
         return int(self.get('decision_window_minutes'))
+
+    @property
+    def auto_attach(self) -> bool:
+        return bool(self.get('auto_attach'))

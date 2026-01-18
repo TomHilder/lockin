@@ -272,6 +272,7 @@ When attached to a running session, use these keys:
 | `abandon_threshold_minutes` | 5 | Minimum time to log abandoned work sessions | 1-1440 |
 | `break_scrap_threshold_minutes` | 2 | Minimum time to log breaks | 1-1440 |
 | `decision_window_minutes` | 3 | Time to decide after session completes | 1-1440 |
+| `auto_attach` | false | Automatically attach to session after starting | true/false |
 
 **Examples:**
 
@@ -286,6 +287,9 @@ lockin config abandon_threshold_minutes 10
 
 # Longer decision window
 lockin config decision_window_minutes 5
+
+# Automatically show the session UI when starting
+lockin config auto_attach true
 ```
 
 ## Example Workflows
