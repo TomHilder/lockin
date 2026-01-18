@@ -1,10 +1,25 @@
 """Main entry point for Lockin CLI."""
 
 import argparse
+import subprocess
 from pathlib import Path
 
 from .cli import LockinUI, console
 from .config import Config
+
+
+def is_engine_running() -> bool:
+    """Check if the engine LaunchAgent is loaded."""
+    try:
+        result = subprocess.run(
+            ['launchctl', 'list'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return 'com.lockin.engine' in result.stdout
+    except Exception:
+        return False
 
 
 def get_data_dir() -> Path:
@@ -47,11 +62,11 @@ Examples:
                        help='Date for stats (DDMMYY for week/month, YYYY for year)')
     
     args = parser.parse_args()
-    
-    # Check if engine is running (by checking if state exists and is recent)
+
+    # Check if engine is running
     state = ui.get_current_state()
-    engine_running = state is not None
-    
+    engine_running = is_engine_running()
+
     if not engine_running:
         console.print("[yellow]Warning:[/yellow] Lockin engine not running")
         console.print("Start the engine with: [cyan]lockin-engine[/cyan]")
