@@ -9,26 +9,23 @@ Lockin is a macOS-only terminal-based focus timer with a persistent background e
 ## Development Commands
 
 ```bash
-# Development setup
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+# Development setup (uses uv)
+uv venv
+uv pip install -e ".[dev]"
 
 # Run engine locally (Terminal 1)
-./dev-engine.sh
+uv run lockin-engine
 
 # Use CLI (Terminal 2)
-source .venv/bin/activate
-lockin 30                    # Start 30-min session
-lockin                       # Attach to running session
+uv run lockin 30             # Start 30-min session
+uv run lockin                # Attach to running session
 
 # Run tests
-pytest tests/ -v
-pytest tests/test_database.py::test_session_logging -v  # Single test
-pytest --cov=lockin tests/   # With coverage
+uv run pytest tests/ -v
+uv run pytest tests/test_database.py::test_session_logging -v  # Single test
 
 # Full integration test
-python final_verification.py
+uv run python tests/final_verification.py
 ```
 
 ## Architecture
