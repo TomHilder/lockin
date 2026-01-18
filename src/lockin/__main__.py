@@ -145,20 +145,29 @@ Examples:
         elapsed_minutes = (time.time() - state['start_time']) / 60
         config = Config(ui.db)
 
-        # Check if past minimum threshold (unless --scrap)
-        if not args.scrap:
-            if session_type == 'work':
-                threshold = config.abandon_threshold_minutes
-            else:
-                threshold = config.break_scrap_threshold_minutes
+        # Determine threshold
+        if session_type == 'work':
+            threshold = config.abandon_threshold_minutes
+        else:
+            threshold = config.break_scrap_threshold_minutes
 
-            if elapsed_minutes < threshold:
-                console.print(f"[yellow]Session only {elapsed_minutes:.1f} min old (threshold: {threshold} min)[/yellow]")
-                console.print("Use [cyan]lockin quit --scrap[/cyan] to force quit")
-                return
+        below_threshold = elapsed_minutes < threshold
+
+        # Check if past minimum threshold (unless --scrap)
+        if below_threshold and not args.scrap:
+            console.print(f"[yellow]Session only {elapsed_minutes:.1f} min old (threshold: {threshold} min)[/yellow]")
+            console.print("Use [cyan]lockin quit --scrap[/cyan] to force quit")
+            return
 
         ui.queue_command('quit_session')
-        console.print(f"[green]{session_type.capitalize()} session ended[/green]")
+
+        # Show appropriate message
+        if below_threshold:
+            console.print(f"[yellow]{session_type.capitalize()} session scrapped (not logged)[/yellow]")
+        elif session_type == 'work':
+            console.print(f"[green]{session_type.capitalize()} session ended early (logged)[/green]")
+        else:
+            console.print(f"[green]{session_type.capitalize()} session ended (logged)[/green]")
         return
 
     # Break command
