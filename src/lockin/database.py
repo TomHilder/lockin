@@ -37,7 +37,7 @@ class Database:
                 CREATE TABLE IF NOT EXISTS sessions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     session_type TEXT NOT NULL,  -- 'work' or 'break'
-                    state TEXT NOT NULL,  -- 'completed', 'abandoned', 'overtime'
+                    state TEXT NOT NULL,  -- 'completed', 'abandoned', 'ended_early'
                     start_time REAL NOT NULL,
                     end_time REAL,
                     planned_duration_minutes INTEGER NOT NULL,
