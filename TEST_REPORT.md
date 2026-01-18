@@ -84,7 +84,7 @@ db = Database(Path('/tmp/test_lockin.db'))
 2. Simulate time passing (planned_end_time in past)
 3. Run tick()
 4. State changed to: AWAITING_DECISION ✅
-5. Continue to: RUNNING_BONUS TIME ✅
+5. Continue to: RUNNING_BONUS ✅
 6. Quit session: Logged as completed ✅
 
 **Result:** ✅ Bonus time logic works correctly
@@ -133,11 +133,11 @@ lockin --help
 ## Bug Found and Fixed
 
 ### Issue
-**Bug:** Sessions quit from RUNNING_BONUS TIME state were not being logged if actual duration was below abandon_threshold_minutes.
+**Bug:** Sessions quit from RUNNING_BONUS state were not being logged if actual duration was below abandon_threshold_minutes.
 
 **Root Cause:** The quit_session logic only checked actual duration against threshold, not whether the session had already entered bonus time (which means it completed the planned duration).
 
-**Fix Applied:** Modified quit_session to check current_state and properly log sessions that are in RUNNING_BONUS TIME or AWAITING_DECISION as 'completed' regardless of threshold.
+**Fix Applied:** Modified quit_session to check current_state and properly log sessions that are in RUNNING_BONUS or AWAITING_DECISION as 'completed' regardless of threshold.
 
 **Verification:** 
 - Started session, entered bonus time, quit immediately

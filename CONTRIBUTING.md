@@ -130,7 +130,7 @@ lockin/
 ### State Flow
 
 ```
-idle → running → awaiting_decision → running_bonus time
+idle → running → awaiting_decision → running_bonus → ended
                       ↓
                     ended
 ```

@@ -129,7 +129,7 @@ Every requirement from your technical specification has been implemented:
 
 2. **Session Types & States**
    - ✅ Work and break sessions
-   - ✅ Complete state machine (idle → running → awaiting_decision → running_bonus time → ended)
+   - ✅ Complete state machine (idle → running → awaiting_decision → running_bonus → ended)
 
 3. **Timing & Logging Rules**
    - ✅ Abandon threshold for work sessions

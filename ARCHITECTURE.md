@@ -97,7 +97,7 @@ sessions (
     end_time REAL,
     planned_duration_minutes INTEGER,
     actual_duration_minutes REAL,
-    bonus time_minutes REAL
+    overtime_minutes REAL  -- stores bonus time duration
 )
 
 -- User configuration
@@ -226,13 +226,13 @@ Visual representation:
 **State transitions:**
 
 | From | Event | To | Side Effects |
-|------|-------|----|--------------| 
+|------|-------|----|--------------|
 | IDLE | start_session | RUNNING | Create state, save to DB |
 | RUNNING | time expires | AWAITING_DECISION | Send notification, start decision timer |
-| AWAITING_DECISION | continue | RUNNING_BONUS TIME | Update state |
+| AWAITING_DECISION | continue | RUNNING_BONUS | Update state |
 | AWAITING_DECISION | quit | ENDED | Log session, reset state |
-| AWAITING_DECISION | timeout | RUNNING_BONUS TIME | Auto-continue |
-| RUNNING_BONUS TIME | quit | ENDED | Log session with bonus time |
+| AWAITING_DECISION | timeout | RUNNING_BONUS | Auto-continue |
+| RUNNING_BONUS | quit | ENDED | Log session with bonus time |
 | RUNNING | quit | ENDED/IDLE | Log if > threshold, else scrap |
 | ENDED | - | IDLE | Immediate (same tick) |
 
