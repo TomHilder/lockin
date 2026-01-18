@@ -66,8 +66,8 @@ lockin 25       # Second session
 
 **Afternoon:**
 ```bash
-lockin stats    # Check progress
-lockin 45       # Longer session
+lockin stats week  # Check progress
+lockin 45          # Longer session
 ```
 
 **Evening:**
