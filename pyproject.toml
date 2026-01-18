@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lockin"
+version = "1.0.0"
+description = "macOS terminal focus timer with persistence"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "Lockin Team"}
+]
+dependencies = [
+    "rich>=13.0.0",
+]
+
+[project.scripts]
+lockin = "lockin.__main__:main"
+lockin-engine = "lockin.engine_main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
