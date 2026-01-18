@@ -1,11 +1,12 @@
 """Database layer for Lockin - SQLite persistence."""
 
+import json
 import sqlite3
+import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional, List, Dict, Any
-import json
+from typing import Any, Dict, List, Optional
 
 
 class Database:
@@ -179,10 +180,17 @@ class Database:
             """, (today_start.timestamp(),))
             
             sessions = cursor.fetchall()
-            
+
             if not sessions:
                 return 0
-            
+
+            # Check if most recent session was more than 60 minutes ago
+            # If so, the streak has expired
+            most_recent_end = sessions[-1]['end_time']
+            minutes_since_last = (time.time() - most_recent_end) / 60
+            if minutes_since_last >= 60:
+                return 0
+
             streak = 1
             for i in range(1, len(sessions)):
                 prev_end = sessions[i-1]['end_time']
