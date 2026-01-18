@@ -203,6 +203,40 @@ class LockinUI:
                 else:
                     console.print("[dim][q] end break   [d] detach[/dim]")
     
+    def _prompt_custom_break_duration(self, old_settings) -> Optional[int]:
+        """Prompt user for custom break duration. Returns duration in minutes or None if cancelled."""
+        import termios
+
+        # Restore terminal to normal mode for input
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+
+        try:
+            console.print("\n[cyan]Enter break duration in minutes (or press Enter to cancel):[/cyan] ", end="")
+            user_input = input().strip()
+
+            if not user_input:
+                return None
+
+            try:
+                duration = int(user_input)
+                if duration < 1:
+                    console.print("[red]Duration must be at least 1 minute[/red]")
+                    time.sleep(1)
+                    return None
+                if duration > 1440:
+                    console.print("[red]Duration cannot exceed 1440 minutes (24 hours)[/red]")
+                    time.sleep(1)
+                    return None
+                return duration
+            except ValueError:
+                console.print("[red]Invalid number[/red]")
+                time.sleep(1)
+                return None
+        finally:
+            # Return to raw mode
+            import tty
+            tty.setcbreak(sys.stdin.fileno())
+
     def _show_decision_controls(self, state: dict):
         """Show decision window controls."""
         session_type = state['session_type']
@@ -252,11 +286,12 @@ class LockinUI:
                 
                 # Check for keyboard input (non-blocking)
                 if select.select([sys.stdin], [], [], 1)[0]:
-                    key = sys.stdin.read(1).lower()
-                    
+                    raw_key = sys.stdin.read(1)
+                    key = raw_key.lower()
+
                     session_state = state['session_state']
                     session_type = state['session_type']
-                    
+
                     if key == 'q':
                         self.queue_command('quit_session')
                         time.sleep(0.5)  # Wait for processing
@@ -266,20 +301,30 @@ class LockinUI:
                         break
                     elif key == 'c' and session_state == SessionState.AWAITING_DECISION:
                         self.queue_command('continue_session')
+                    elif raw_key == 'B' and session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                        # Custom break duration - prompt user
+                        if session_type == SessionType.WORK:
+                            duration = self._prompt_custom_break_duration(old_settings)
+                            if duration:
+                                self.queue_command('quit_session')
+                                time.sleep(0.5)
+                                self.queue_command('start_session',
+                                                 session_type='break',
+                                                 duration_minutes=duration)
                     elif key == 'b' and session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
                         # Start recommended break
                         if session_type == SessionType.WORK:
                             self.queue_command('quit_session')
                             time.sleep(0.5)
-                            
+
                             # Determine break type
                             streak = self.db.calculate_current_streak()
                             if streak % self.config.long_break_every == 0:
                                 duration = self.config.long_break_minutes
                             else:
                                 duration = self.config.short_break_minutes
-                            
-                            self.queue_command('start_session', 
+
+                            self.queue_command('start_session',
                                              session_type='break',
                                              duration_minutes=duration)
                     elif key == 's' and session_type == SessionType.BREAK:
