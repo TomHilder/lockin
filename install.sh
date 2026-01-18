@@ -2,6 +2,7 @@
 
 # Lockin Installation Script for macOS
 # This script installs Lockin in a dedicated virtual environment
+# Supports both uv and pip package managers
 
 set -e
 
@@ -25,30 +26,45 @@ PLIST_FILE="$LAUNCH_AGENTS_DIR/com.lockin.engine.plist"
 echo "📁 Creating Lockin directory..."
 mkdir -p "$LOCKIN_DIR"
 
-# Check if Python 3 is available
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Error: Python 3 is required but not found"
-    echo "Please install Python 3 from https://www.python.org/"
-    exit 1
+# Detect package manager (prefer uv if available)
+USE_UV=false
+if command -v uv &> /dev/null; then
+    USE_UV=true
+    echo "✓ Found uv package manager"
+else
+    # Check if Python 3 is available
+    if ! command -v python3 &> /dev/null; then
+        echo "❌ Error: Python 3 is required but not found"
+        echo "Please install Python 3 from https://www.python.org/"
+        echo "Or install uv from https://docs.astral.sh/uv/"
+        exit 1
+    fi
+    PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
+    echo "✓ Found Python $PYTHON_VERSION (using pip)"
 fi
 
-PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-echo "✓ Found Python $PYTHON_VERSION"
+# Create virtual environment and install
+if $USE_UV; then
+    echo "🐍 Creating virtual environment with uv..."
+    uv venv "$VENV_DIR"
 
-# Create virtual environment
-echo "🐍 Creating virtual environment..."
-python3 -m venv "$VENV_DIR"
+    echo "📥 Installing Lockin..."
+    VIRTUAL_ENV="$VENV_DIR" uv pip install -e . > /dev/null
+else
+    echo "🐍 Creating virtual environment..."
+    python3 -m venv "$VENV_DIR"
 
-# Activate virtual environment
-source "$VENV_DIR/bin/activate"
+    # Activate virtual environment
+    source "$VENV_DIR/bin/activate"
 
-# Upgrade pip
-echo "📦 Upgrading pip..."
-pip install --upgrade pip > /dev/null
+    # Upgrade pip
+    echo "📦 Upgrading pip..."
+    pip install --upgrade pip > /dev/null
 
-# Install Lockin
-echo "📥 Installing Lockin..."
-pip install -e . > /dev/null
+    # Install Lockin
+    echo "📥 Installing Lockin..."
+    pip install -e . > /dev/null
+fi
 
 echo "✓ Lockin installed"
 
@@ -71,9 +87,9 @@ echo "✓ Background engine installed and started"
 
 # Add to PATH
 SHELL_RC=""
-if [[ -n "$ZSH_VERSION" ]]; then
+if [[ -n "$ZSH_VERSION" ]] || [[ "$SHELL" == *"zsh"* ]]; then
     SHELL_RC="$HOME/.zshrc"
-elif [[ -n "$BASH_VERSION" ]]; then
+elif [[ -n "$BASH_VERSION" ]] || [[ "$SHELL" == *"bash"* ]]; then
     SHELL_RC="$HOME/.bashrc"
 fi
 

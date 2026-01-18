@@ -11,22 +11,18 @@ git clone <repository-url>
 cd lockin
 ```
 
-### 2. Create virtual environment
+### 2. Install dependencies
 
+**Using uv (recommended):**
+```bash
+uv venv
+uv pip install -e ".[dev]"
+```
+
+**Using pip:**
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-### 3. Install in development mode
-
-```bash
-pip install -e .
-```
-
-### 4. Install development dependencies
-
-```bash
 pip install -e ".[dev]"
 ```
 
@@ -34,7 +30,7 @@ pip install -e ".[dev]"
 
 ### Option 1: Use the development script
 
-The easiest way to test changes:
+The easiest way to test changes (auto-detects uv or pip):
 
 ```bash
 ./dev-engine.sh
@@ -44,21 +40,34 @@ This runs the engine in the foreground without installing as a LaunchAgent.
 
 In another terminal:
 ```bash
+# With uv:
+uv run lockin 30   # Start session
+uv run lockin      # Attach to session
+
+# With pip (after activating venv):
 source .venv/bin/activate
-lockin 30        # Start session
-lockin           # Attach to session
+lockin 30
+lockin
 ```
 
 ### Option 2: Manual testing
 
-Terminal 1 - Run engine:
+**With uv:**
 ```bash
-source .venv/bin/activate
-python -m lockin.engine_main
+# Terminal 1 - Run engine:
+uv run python -m lockin.engine_main
+
+# Terminal 2 - Use CLI:
+uv run lockin 30
 ```
 
-Terminal 2 - Use CLI:
+**With pip:**
 ```bash
+# Terminal 1 - Run engine:
+source .venv/bin/activate
+python -m lockin.engine_main
+
+# Terminal 2 - Use CLI:
 source .venv/bin/activate
 lockin 30
 ```
@@ -138,19 +147,23 @@ CLI <──(poll state)───── Database <──(update)── Engine
 ### Run tests
 
 ```bash
+# With uv:
+uv run pytest tests/ -v
+
+# With pip (venv activated):
 pytest tests/ -v
 ```
 
 ### Run specific test
 
 ```bash
-pytest tests/test_database.py::test_session_logging -v
+uv run pytest tests/test_database.py::test_session_logging -v
 ```
 
 ### Test coverage
 
 ```bash
-pytest --cov=lockin tests/
+uv run pytest --cov=lockin tests/
 ```
 
 ## Code Style
@@ -203,8 +216,8 @@ db = Database(Path('/tmp/test.db'))
 ./dev-engine.sh
 
 # In another terminal, test UI
-lockin 1  # Quick 1-minute session
-lockin    # Attach and see UI
+uv run lockin 1  # Quick 1-minute session
+uv run lockin    # Attach and see UI
 ```
 
 ### Testing Notifications
@@ -275,6 +288,10 @@ Examples:
 
 [database] Optimize session query performance
 ```
+
+## Future Work (TODOs)
+
+- **GitHub Actions CI**: Set up automated testing for both uv and pip installation workflows
 
 ## Ideas for Contributions
 
