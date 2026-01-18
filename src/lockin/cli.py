@@ -6,9 +6,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from rich.console import Console
+from rich.console import Console, Group
+from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
+from rich.text import Text
 from rich import box
 
 from .database import Database
@@ -39,11 +41,169 @@ def format_time_remaining(seconds: float) -> str:
 
 class LockinUI:
     """Terminal UI manager for Lockin."""
-    
+
     def __init__(self, db_path: Path):
         self.db = Database(db_path)
         self.config = Config(self.db)
-    
+
+    def get_recommended_break_type(self) -> str:
+        """Get recommended break type based on current streak.
+
+        Returns "short" or "long" based on whether the current streak
+        is a multiple of long_break_every.
+        """
+        streak = self.db.calculate_current_streak()
+        long_break_every = self.config.long_break_every
+
+        # Recommend long break every N sessions (but not at streak 0)
+        if streak > 0 and streak % long_break_every == 0:
+            return "long"
+        return "short"
+
+    def get_recommended_break_duration(self) -> int:
+        """Get recommended break duration in minutes based on current streak."""
+        break_type = self.get_recommended_break_type()
+        if break_type == "long":
+            return self.config.long_break_minutes
+        return self.config.short_break_minutes
+
+    def make_running_renderable(self, state: dict, interactive: bool = True) -> Group:
+        """Build a renderable for the running session UI.
+
+        Returns a Group of Rich renderables instead of printing directly.
+        Used with Live for flicker-free updates.
+        """
+        elements = []
+
+        session_type = state['session_type']
+        start_time = state['start_time']
+        planned_end = state['planned_end_time']
+        planned_duration = state['planned_duration_minutes']
+        session_state = state['session_state']
+
+        now = time.time()
+        elapsed = now - start_time
+
+        # Calculate time remaining
+        if session_state == SessionState.RUNNING:
+            remaining = max(0, planned_end - now)
+            time_label = "remaining"
+        elif session_state == SessionState.AWAITING_DECISION:
+            decision_start = state['decision_window_start']
+            decision_window = self.config.decision_window_minutes * 60
+            remaining = max(0, decision_window - (now - decision_start))
+            time_label = "to decide"
+        else:  # RUNNING_BONUS
+            remaining = now - planned_end
+            time_label = "bonus time"
+
+        # Header
+        type_display = session_type
+        if session_type == SessionType.BREAK:
+            if planned_duration == self.config.short_break_minutes:
+                type_display = "break (short)"
+            elif planned_duration == self.config.long_break_minutes:
+                type_display = "break (long)"
+            else:
+                type_display = f"break ({planned_duration}m)"
+
+        elements.append(Panel.fit(
+            f"[bold cyan]LOCKIN[/bold cyan] — {type_display}",
+            border_style="cyan"
+        ))
+        elements.append(Text())  # Empty line
+
+        # Time remaining
+        time_str = format_time_remaining(remaining)
+        if session_state in [SessionState.RUNNING, SessionState.AWAITING_DECISION]:
+            elements.append(Text.from_markup(f"[bold green]{time_str}[/bold green] {time_label}"))
+        else:
+            elements.append(Text.from_markup(f"[bold yellow]+{time_str}[/bold yellow] {time_label}"))
+        elements.append(Text())  # Empty line after timer
+
+        # Progress bar
+        if session_state == SessionState.RUNNING:
+            progress_pct = min(100, (elapsed / (planned_duration * 60)) * 100)
+        elif session_state == SessionState.AWAITING_DECISION:
+            decision_elapsed = now - state['decision_window_start']
+            decision_window = self.config.decision_window_minutes * 60
+            progress_pct = 100 - min(100, (decision_elapsed / decision_window) * 100)
+        else:
+            progress_pct = 100
+
+        bar_length = 40
+        filled = int(bar_length * progress_pct / 100)
+        has_half = progress_pct % (100 / bar_length) > 0 and filled < bar_length
+        empty = bar_length - filled - (1 if has_half else 0)
+        bar = "█" * filled + ("▌" if has_half else "") + "░" * empty
+        elements.append(Text.from_markup(f"[cyan]{bar}[/cyan]"))
+        elements.append(Text())  # Empty line
+
+        # Session details
+        start_dt = datetime.fromtimestamp(start_time)
+        elements.append(Text.from_markup(f"[dim]Started:[/dim] [cyan]{start_dt.strftime('%H:%M')}[/cyan]"))
+        elements.append(Text.from_markup(f"[dim]Planned:[/dim] [cyan]{planned_duration} min[/cyan]"))
+        elements.append(Text.from_markup(f"[dim]Elapsed:[/dim] [cyan]{format_time_remaining(elapsed)}[/cyan]"))
+        elements.append(Text())  # Empty line
+
+        # Today's stats
+        stats = self.db.get_todays_stats()
+        streak = self.db.calculate_current_streak()
+        elements.append(Text.from_markup(
+            f"[dim]Today:[/dim] [green]{format_duration(stats['total_work_minutes'])}[/green] [dim]focused ·[/dim] "
+            f"[green]{stats['session_count']}[/green] [dim]sessions · streak[/dim] [green]{streak}[/green]"
+        ))
+        elements.append(Text())  # Empty line
+
+        # Controls
+        if interactive:
+            if session_state == SessionState.AWAITING_DECISION:
+                elements.extend(self._make_decision_controls(state))
+            elif session_state == SessionState.RUNNING:
+                if session_type == SessionType.WORK:
+                    abandon_threshold_minutes = self.config.abandon_threshold_minutes
+                    elapsed_minutes = elapsed / 60
+                    if elapsed_minutes < abandon_threshold_minutes:
+                        elements.append(Text.from_markup("[dim]\\[q] quit (scrap)   \\[d] detach[/dim]"))
+                    else:
+                        elements.append(Text.from_markup("[dim]\\[q] quit (end early)   \\[d] detach[/dim]"))
+                else:  # Break
+                    break_threshold = self.config.break_scrap_threshold_minutes
+                    elapsed_minutes = elapsed / 60
+                    if elapsed_minutes < break_threshold:
+                        elements.append(Text.from_markup("[dim]\\[q] end (scrap)   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]"))
+                    else:
+                        elements.append(Text.from_markup("[dim]\\[q] end break   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]"))
+            elif session_state == SessionState.RUNNING_BONUS:
+                if session_type == SessionType.WORK:
+                    break_label = self.get_recommended_break_type()
+                    elements.append(Text.from_markup(f"[dim]\\[q] quit (end)   \\[b/B] break ({break_label}/custom)   \\[d] detach[/dim]"))
+                else:
+                    elements.append(Text.from_markup("[dim]\\[q] end break   \\[d] detach[/dim]"))
+            elements.append(Text())  # Extra newline before cursor
+
+        return Group(*elements)
+
+    def _make_decision_controls(self, state: dict) -> list:
+        """Build decision window controls as renderables."""
+        elements = []
+        session_type = state['session_type']
+
+        if session_type == SessionType.WORK:
+            break_label = self.get_recommended_break_type()
+            elements.append(Text.from_markup(f"[dim]\\[q] quit (end)   \\[b/B] break ({break_label}/custom)   \\[c] continue   \\[d] detach[/dim]"))
+
+            # Show countdown
+            now = time.time()
+            decision_start = state['decision_window_start']
+            decision_window = self.config.decision_window_minutes * 60
+            remaining = max(0, decision_window - (now - decision_start))
+            elements.append(Text.from_markup(f"[dim]Defaulting to continue in {format_time_remaining(remaining)}[/dim]"))
+        else:
+            elements.append(Text.from_markup("[dim]\\[q] end break   \\[d] detach[/dim]"))
+
+        return elements
+
     def get_current_state(self) -> Optional[dict]:
         """Get current engine state."""
         return self.db.get_engine_state()
@@ -95,116 +255,6 @@ class LockinUI:
         console.print("  [cyan]lockin 30[/cyan]")
         console.print("  [cyan]lockin break[/cyan]")
         console.print("  [cyan]lockin stats[/cyan]")
-    
-    def show_running_session(self, state: dict, interactive: bool = True):
-        """Display running session UI."""
-        console.clear()
-        
-        session_type = state['session_type']
-        start_time = state['start_time']
-        planned_end = state['planned_end_time']
-        planned_duration = state['planned_duration_minutes']
-        session_state = state['session_state']
-        
-        now = time.time()
-        elapsed = now - start_time
-        
-        # Calculate time remaining
-        if session_state == SessionState.RUNNING:
-            remaining = max(0, planned_end - now)
-            time_label = "remaining"
-        elif session_state == SessionState.AWAITING_DECISION:
-            decision_start = state['decision_window_start']
-            decision_window = self.config.decision_window_minutes * 60
-            remaining = max(0, decision_window - (now - decision_start))
-            time_label = "to decide"
-        else:  # RUNNING_BONUS
-            remaining = now - planned_end
-            time_label = "bonus time"
-        
-        # Header
-        type_display = session_type
-        if session_type == SessionType.BREAK:
-            # Determine if short or long break
-            if planned_duration == self.config.short_break_minutes:
-                type_display = "break (short)"
-            elif planned_duration == self.config.long_break_minutes:
-                type_display = "break (long)"
-            else:
-                type_display = f"break ({planned_duration}m)"
-        
-        console.print(Panel.fit(
-            f"[bold cyan]LOCKIN[/bold cyan] — {type_display}",
-            border_style="cyan"
-        ))
-        console.print()
-        
-        # Time remaining
-        if session_state in [SessionState.RUNNING, SessionState.AWAITING_DECISION]:
-            time_str = format_time_remaining(remaining)
-            console.print(f"[bold green]{time_str}[/bold green] {time_label}", justify="center")
-        else:
-            time_str = format_time_remaining(remaining)
-            console.print(f"[bold yellow]+{time_str}[/bold yellow] {time_label}", justify="center")
-        
-        # Progress bar
-        if session_state == SessionState.RUNNING:
-            progress_pct = min(100, (elapsed / (planned_duration * 60)) * 100)
-        elif session_state == SessionState.AWAITING_DECISION:
-            decision_elapsed = now - state['decision_window_start']
-            decision_window = self.config.decision_window_minutes * 60
-            progress_pct = 100 - min(100, (decision_elapsed / decision_window) * 100)
-        else:
-            progress_pct = 100
-        
-        bar_length = 40
-        filled = int(bar_length * progress_pct / 100)
-        bar = "█" * filled + "▌" * (1 if progress_pct % (100/bar_length) > 0 and filled < bar_length else 0)
-        console.print(f"[cyan]{bar}[/cyan]")
-        console.print()
-        
-        # Session details
-        start_dt = datetime.fromtimestamp(start_time)
-        console.print(f"[dim]Started: {start_dt.strftime('%H:%M')}[/dim]")
-        console.print(f"[dim]Planned: {planned_duration} min[/dim]")
-        console.print(f"[dim]Elapsed: {format_time_remaining(elapsed)}[/dim]")
-        console.print()
-        
-        # Today's stats
-        stats = self.db.get_todays_stats()
-        streak = self.db.calculate_current_streak()
-        console.print(
-            f"[dim]Today: {format_duration(stats['total_work_minutes'])} focused · "
-            f"{stats['session_count']} sessions · streak {streak}[/dim]"
-        )
-        console.print()
-        
-        # Controls
-        if interactive:
-            if session_state == SessionState.AWAITING_DECISION:
-                self._show_decision_controls(state)
-            elif session_state == SessionState.RUNNING:
-                if session_type == SessionType.WORK:
-                    # Show "scrap" if below abandon threshold, "end early" if above
-                    abandon_threshold_minutes = self.config.abandon_threshold_minutes
-                    elapsed_minutes = elapsed / 60
-                    if elapsed_minutes < abandon_threshold_minutes:
-                        console.print("[dim]\\[q] quit (scrap)   \\[d] detach[/dim]")
-                    else:
-                        console.print("[dim]\\[q] quit (end early)   \\[d] detach[/dim]")
-                else:  # Break
-                    break_threshold = self.config.break_scrap_threshold_minutes
-                    elapsed_minutes = elapsed / 60
-                    if elapsed_minutes < break_threshold:
-                        console.print("[dim]\\[q] end (scrap)   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]")
-                    else:
-                        console.print("[dim]\\[q] end break   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]")
-            elif session_state == SessionState.RUNNING_BONUS:
-                if session_type == SessionType.WORK:
-                    console.print("[dim]\\[q] quit (end)   \\[b/B] break (short/custom)   \\[d] detach[/dim]")
-                else:
-                    console.print("[dim]\\[q] end break   \\[d] detach[/dim]")
-            console.print()  # Extra newline before cursor
 
     def _prompt_custom_break_duration(self, old_settings) -> Optional[int]:
         """Prompt user for custom break duration. Returns duration in minutes or None if cancelled."""
@@ -240,32 +290,10 @@ class LockinUI:
             import tty
             tty.setcbreak(sys.stdin.fileno())
 
-    def _show_decision_controls(self, state: dict):
-        """Show decision window controls."""
-        session_type = state['session_type']
-        
-        if session_type == SessionType.WORK:
-            streak = self.db.calculate_current_streak()
-            long_break_every = self.config.long_break_every
-            
-            if streak > 0 and streak % long_break_every == 0:
-                break_label = "long"
-            else:
-                break_label = "short"
-            
-            console.print(f"[dim]\\[q] quit (end)   \\[b/B] break ({break_label}/custom)   \\[c] continue   \\[d] detach[/dim]")
-            
-            # Show countdown
-            now = time.time()
-            decision_start = state['decision_window_start']
-            decision_window = self.config.decision_window_minutes * 60
-            remaining = max(0, decision_window - (now - decision_start))
-            console.print(f"[dim]Defaulting to continue in {format_time_remaining(remaining)}[/dim]")
-        else:
-            console.print("[dim]\\[q] end break   \\[d] detach[/dim]")
-
     def attach_to_session(self, wait_for_session: bool = False):
         """Attach to running session with live updates.
+
+        Uses Rich Live with alternate screen for flicker-free rendering.
 
         Args:
             wait_for_session: If True, wait up to 3 seconds for session to start
@@ -287,87 +315,109 @@ class LockinUI:
 
         # Set terminal to raw mode for immediate key detection
         old_settings = termios.tcgetattr(sys.stdin)
+        exit_message = None  # Message to show after exiting Live context
+        custom_break_requested = False  # Flag for custom break prompt
 
         try:
             tty.setcbreak(sys.stdin.fileno())
 
-            while True:
-                state = self.get_current_state()
+            # Get initial state for Live
+            state = self.get_current_state()
+            if not state or state['session_state'] in [SessionState.IDLE, SessionState.ENDED]:
+                console.print("[yellow]Session ended[/yellow]")
+                return
 
-                if not state or state['session_state'] in [SessionState.IDLE, SessionState.ENDED]:
-                    console.print("\n[yellow]Session ended[/yellow]")
-                    break
-                
-                self.show_running_session(state, interactive=True)
-                
-                # Check for keyboard input (non-blocking)
-                if select.select([sys.stdin], [], [], 1)[0]:
-                    raw_key = sys.stdin.read(1)
-                    key = raw_key.lower()
+            with Live(
+                self.make_running_renderable(state),
+                console=console,
+                screen=True,
+                refresh_per_second=4
+            ) as live:
+                while True:
+                    state = self.get_current_state()
 
-                    session_state = state['session_state']
-                    session_type = state['session_type']
-
-                    if key == 'q':
-                        self.queue_command('quit_session')
-                        time.sleep(0.5)  # Wait for processing
-                        # Show appropriate message
-                        elapsed_minutes = (time.time() - state['start_time']) / 60
-                        if session_type == SessionType.WORK:
-                            threshold = self.config.abandon_threshold_minutes
-                            if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
-                                console.print("\n[green]Work session completed[/green]")
-                            elif elapsed_minutes < threshold:
-                                console.print("\n[yellow]Work session scrapped (not logged)[/yellow]")
-                            else:
-                                console.print("\n[green]Work session ended early (logged)[/green]")
-                        else:  # Break
-                            threshold = self.config.break_scrap_threshold_minutes
-                            if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
-                                console.print("\n[green]Break completed[/green]")
-                            elif elapsed_minutes < threshold:
-                                console.print("\n[yellow]Break scrapped (not logged)[/yellow]")
-                            else:
-                                console.print("\n[green]Break ended (logged)[/green]")
+                    if not state or state['session_state'] in [SessionState.IDLE, SessionState.ENDED]:
+                        exit_message = "[yellow]Session ended[/yellow]"
                         break
-                    elif key == 'd':
-                        console.print("\n[dim]Detached. Session continues in background.[/dim]")
-                        break
-                    elif key == 'c' and session_state == SessionState.AWAITING_DECISION:
-                        self.queue_command('continue_session')
-                    elif raw_key == 'B' and session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
-                        # Custom break duration - prompt user
-                        if session_type == SessionType.WORK:
-                            duration = self._prompt_custom_break_duration(old_settings)
-                            if duration:
+
+                    live.update(self.make_running_renderable(state))
+
+                    # Check for keyboard input (non-blocking)
+                    if select.select([sys.stdin], [], [], 0.25)[0]:
+                        raw_key = sys.stdin.read(1)
+                        key = raw_key.lower()
+
+                        session_state = state['session_state']
+                        session_type = state['session_type']
+
+                        if key == 'q':
+                            self.queue_command('quit_session')
+                            time.sleep(0.5)  # Wait for processing
+                            # Determine exit message
+                            elapsed_minutes = (time.time() - state['start_time']) / 60
+                            if session_type == SessionType.WORK:
+                                threshold = self.config.abandon_threshold_minutes
+                                if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                                    exit_message = "[green]Work session completed[/green]"
+                                elif elapsed_minutes < threshold:
+                                    exit_message = "[yellow]Work session scrapped (not logged)[/yellow]"
+                                else:
+                                    exit_message = "[green]Work session ended early (logged)[/green]"
+                            else:  # Break
+                                threshold = self.config.break_scrap_threshold_minutes
+                                if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                                    exit_message = "[green]Break completed[/green]"
+                                elif elapsed_minutes < threshold:
+                                    exit_message = "[yellow]Break scrapped (not logged)[/yellow]"
+                                else:
+                                    exit_message = "[green]Break ended (logged)[/green]"
+                            break
+                        elif key == 'd':
+                            exit_message = "[dim]Detached. Session continues in background.[/dim]"
+                            break
+                        elif key == 'c' and session_state == SessionState.AWAITING_DECISION:
+                            self.queue_command('continue_session')
+                        elif raw_key == 'B' and session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                            # Custom break - need to exit Live for prompt
+                            if session_type == SessionType.WORK:
+                                custom_break_requested = True
+                                break
+                        elif key == 'b' and session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
+                            # Start recommended break
+                            if session_type == SessionType.WORK:
                                 self.queue_command('quit_session')
                                 time.sleep(0.5)
+                                duration = self.get_recommended_break_duration()
                                 self.queue_command('start_session',
                                                  session_type='break',
                                                  duration_minutes=duration)
-                    elif key == 'b' and session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
-                        # Start recommended break
-                        if session_type == SessionType.WORK:
-                            self.queue_command('quit_session')
-                            time.sleep(0.5)
+                        elif key == 's' and session_type == SessionType.BREAK:
+                            self.queue_command('switch_break', break_type='short')
+                        elif key == 'l' and session_type == SessionType.BREAK:
+                            self.queue_command('switch_break', break_type='long')
 
-                            # Determine break type
-                            streak = self.db.calculate_current_streak()
-                            if streak % self.config.long_break_every == 0:
-                                duration = self.config.long_break_minutes
-                            else:
-                                duration = self.config.short_break_minutes
+            # Handle custom break prompt outside Live context
+            if custom_break_requested:
+                duration = self._prompt_custom_break_duration(old_settings)
+                if duration:
+                    self.queue_command('quit_session')
+                    time.sleep(0.5)
+                    self.queue_command('start_session',
+                                     session_type='break',
+                                     duration_minutes=duration)
+                    # Re-attach to the new break session
+                    tty.setcbreak(sys.stdin.fileno())
+                    self.attach_to_session(wait_for_session=True)
+                else:
+                    # User cancelled, re-attach to current session
+                    tty.setcbreak(sys.stdin.fileno())
+                    self.attach_to_session()
+                return
 
-                            self.queue_command('start_session',
-                                             session_type='break',
-                                             duration_minutes=duration)
-                    elif key == 's' and session_type == SessionType.BREAK:
-                        self.queue_command('switch_break', break_type='short')
-                    elif key == 'l' and session_type == SessionType.BREAK:
-                        self.queue_command('switch_break', break_type='long')
-                
-                time.sleep(1)  # Update every second
-        
+            # Show exit message after leaving alternate screen
+            if exit_message:
+                console.print(exit_message)
+
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
     
