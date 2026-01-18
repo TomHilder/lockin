@@ -9,22 +9,17 @@ description = "macOS terminal focus timer with persistence"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    {name = "Tom Hilder"},
-    {name = "Claude", email = "noreply@anthropic.com"}
+    { name = "Tom Hilder", email = "tom.hilder.dlhp@gmail.com" },
+    { name = "Claude", email = "noreply@anthropic.com" },
 ]
-dependencies = [
-    "rich>=13.0.0",
-]
+dependencies = ["rich>=13.0.0"]
 
 [project.scripts]
 lockin = "lockin.__main__:main"
 lockin-engine = "lockin.engine_main:main"
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=7.0.0",
-    "ruff>=0.4.0",
-]
+dev = ["pytest>=7.0.0", "ruff>=0.4.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

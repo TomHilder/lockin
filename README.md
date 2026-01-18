@@ -4,10 +4,12 @@
 
 **Lockin** helps you maintain deep focus through structured work sessions and intelligent breaks. Unlike browser-based timers, Lockin runs as a native background process—your sessions survive terminal closures, system sleeps, and accidental quits.
 
+**Note** Almost this entire repo is AI generated and is a work in progress. Expect slop-like problems for now. Things will improve.
+
 ```bash
-$ lockin 30                    # Start 30-minute focus session
-$ lockin                       # Beautiful live UI
-$ lockin stats week            # Track your progress
+lockin 30                    # Start 30-minute focus session
+lockin                       # Beautiful live UI
+lockin stats week            # Track your progress
 ```
 
 Built for developers, writers, and anyone who needs uninterrupted focus time.
@@ -19,12 +21,14 @@ Built for developers, writers, and anyone who needs uninterrupted focus time.
 ## Why Lockin?
 
 **Traditional timers fail when you need them most:**
+
 - 🔴 Browser tabs get closed
 - 🔴 Web apps lose state on refresh
 - 🔴 Phone apps aren't with you at your desk
 - 🔴 No terminal keeps you in flow
 
 **Lockin is different:**
+
 - ✅ **Persistent** - Runs as macOS background service
 - ✅ **Terminal-native** - Stays in your development environment
 - ✅ **Resilient** - Survives terminal closures, system sleep, network issues
@@ -42,12 +46,14 @@ cd lockin
 ```
 
 That's it. The installer:
+
 - Creates a dedicated Python environment
 - Installs Lockin and dependencies
 - Sets up the background engine as a LaunchAgent
 - Adds `lockin` to your PATH
 
 Restart your terminal or run:
+
 ```bash
 source ~/.zshrc  # or ~/.bashrc
 ```
@@ -63,6 +69,7 @@ lockin
 ```
 
 **During the session:**
+
 - Press `d` to detach (session continues)
 - Press `q` to end early
 - When time's up, choose your next move
@@ -124,6 +131,7 @@ lockin break 10        # Custom 10-minute break
 ```
 
 **Key points:**
+
 - Quitting is **always final** - you can't enter bonus time after quitting
 - After planned time ends, you enter a decision window
 - From decision window: quit (final) OR continue to bonus time
@@ -139,14 +147,17 @@ Session 1 (completed) ──[15 min gap]──▶ Session 2 (completed) ──[3
 ```
 
 **Streak continues if:**
+
 - Sessions are < 1 hour apart
 - Within the same day
 
 **Streak resets if:**
+
 - Gap ≥ 1 hour between sessions
 - Midnight passes
 
 **Streak NOT affected by:**
+
 - Abandoned sessions
 - Taking breaks
 - Going into bonus time
@@ -216,12 +227,14 @@ lockin config reset
 When attached to a running session, use these keys:
 
 ### During Work Session (Before Completion)
+
 | Key | Action |
 |-----|--------|
 | `q` | Quit session (ends early) |
 | `d` | Detach UI (session continues in background) |
 
 ### After Session Completes (Decision Window)
+
 | Key | Action |
 |-----|--------|
 | `q` | End session |
@@ -232,6 +245,7 @@ When attached to a running session, use these keys:
 | *wait* | Auto-continues after 3 minutes |
 
 ### During Bonus time
+
 | Key | Action |
 |-----|--------|
 | `q` | End session |
@@ -240,6 +254,7 @@ When attached to a running session, use these keys:
 | `d` | Detach UI |
 
 ### During Break
+
 | Key | Action |
 |-----|--------|
 | `q` | End break early |
@@ -344,6 +359,7 @@ Sun 24     —
 ```
 
 **Metrics:**
+
 - **Focused (completed)** - Time in completed work sessions only
 - **Break time** - Total break time
 - **Completed sessions** - Sessions that reached their planned duration
@@ -398,6 +414,7 @@ Lockin is designed for reliability and persistence:
 **Symptom:** `Warning: Lockin engine not running`
 
 **Fix:**
+
 ```bash
 # Check if engine is running
 launchctl list | grep lockin
@@ -412,12 +429,14 @@ lockin-engine
 ### Session Not Starting
 
 **Check logs:**
+
 ```bash
 tail -f ~/.lockin/engine.log
 tail -f ~/.lockin/engine.error.log
 ```
 
 **Common issues:**
+
 - Database permissions: `chmod 644 ~/.lockin/lockin.db`
 - Conflicting session already running
 - Engine crashed (restart it)
@@ -425,6 +444,7 @@ tail -f ~/.lockin/engine.error.log
 ### Stats Not Showing
 
 **Ensure database has data:**
+
 ```bash
 sqlite3 ~/.lockin/lockin.db "SELECT COUNT(*) FROM sessions;"
 ```
@@ -436,6 +456,7 @@ sqlite3 ~/.lockin/lockin.db "SELECT COUNT(*) FROM sessions;"
 1. Check macOS Notification settings
 2. Ensure Terminal/iTerm2 has notification permissions
 3. Test manually:
+
    ```bash
    osascript -e 'display notification "Test" with title "Lockin"'
    ```
@@ -510,6 +531,7 @@ sqlite3 -header -csv ~/.lockin/lockin.db \
 ## Development
 
 Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Development setup
 - Project structure
 - Testing guide
@@ -570,12 +592,14 @@ A: Currently macOS only due to LaunchAgent and notification systems. Linux/Windo
 ## Inspiration & Philosophy
 
 Lockin is inspired by:
+
 - **Pomodoro Technique** - Structured focus periods
 - **Deep Work** (Cal Newport) - Uninterrupted concentration
 - **Unix Philosophy** - Do one thing well
 - **Terminal-first tools** - Stay in flow, minimize context switching
 
 Design principles:
+
 - **Reliable over fancy** - Core functionality must never fail
 - **Respectful of attention** - No gamification, no manipulation
 - **Transparent** - Clear data storage, no hidden behavior  
@@ -595,7 +619,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - **Issues:** [GitHub Issues](https://github.com/yourusername/lockin/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/yourusername/lockin/discussions)
-- **Email:** support@lockin.dev
+- **Email:** <support@lockin.dev>
 
 ---
 
