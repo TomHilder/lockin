@@ -50,7 +50,7 @@ Start a focus session, close your terminal, open a new one, run `lockin` — you
 - Sessions survive terminal close (background engine via LaunchAgent)
 - Detach mid-session with `d`, reattach anytime with `lockin`
 - Tracks focus time with daily, weekly, and monthly stats
-- Configurable breaks with streak-based recommendations
+- Pomodoro-inspired break system: short breaks by default, long break every N sessions (configurable)
 - macOS native notifications when sessions complete
 
 ## Quick Start
