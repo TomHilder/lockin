@@ -6,7 +6,7 @@ A terminal focus timer that doesn't die when you close the terminal.
 lockin 30
 ```
 
-Start a focus session, close your terminal, grab coffee, open a new terminal, run `lockin` — your timer is still running. Lockin uses a background engine that persists through terminal sessions, SSH disconnects, and accidental `Ctrl+C`.
+Start a focus session, close your terminal, open a new one, run `lockin` — your timer is still running. Lockin uses a background engine that persists through terminal sessions, SSH disconnects, and accidental `Ctrl+C`.
 
 **Features:**
 - Sessions survive terminal close (background engine via LaunchAgent)
