@@ -185,6 +185,7 @@ The `install.sh` script:
 - Requires manual `source ~/.zshrc` after install
 - No update mechanism
 - No way to install specific version
+- macOS security warnings (see below)
 
 ### Uninstallation: Good
 
@@ -224,6 +225,16 @@ Hard dependencies on:
 1. **No themes**: Fixed color scheme
 2. **No resize handling**: Progress bar width is fixed at 40 chars
 3. **No accessibility**: No screen reader support
+
+### Security & Installation Friction
+
+1. **macOS Gatekeeper warnings**: Downloaded scripts are quarantined. Users must run `xattr -r -d com.apple.quarantine install.sh` or right-click → Open to bypass.
+
+2. **Corporate endpoint protection**: Security software (CrowdStrike, Jamf, etc.) may flag the LaunchAgent or Python process as suspicious. This is difficult to address without code signing.
+
+3. **No code signing**: The app is unsigned, which triggers macOS warnings and corporate security tools. Signing requires an Apple Developer account ($99/year) and adds build complexity.
+
+**Workaround documented**: Users in restricted environments can skip the LaunchAgent and run `lockin-engine` manually in a terminal tab.
 
 ---
 
