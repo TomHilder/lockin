@@ -3,22 +3,64 @@
 A terminal focus timer that doesn't die when you close the terminal.
 
 ```
-lockin 30
+╭────────────────────╮
+│ LOCKIN — work      │
+╰────────────────────╯
+
+17:42 remaining
+
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░
+
+Started: 09:15
+Planned: 30 min
+Elapsed: 12:18
+
+Today: 2h 15m focused · 4 sessions · streak 3
+
+[q] quit   [d] detach
+```
+
+```
+╭──────────────────────────────────╮
+│ LOCKIN — Stats: Week of Jan 13   │
+╰──────────────────────────────────╯
+
+╭─────────────────────┬─────────╮
+│ Metric              │   Value │
+├─────────────────────┼─────────┤
+│ Focused (completed) │  8h 30m │
+│ Break time          │  1h 45m │
+│ Completed sessions  │      17 │
+╰─────────────────────┴─────────╯
+
+Daily breakdown:
+
+Mon 13       1h 30m ( 3 sessions)  ████████████
+Tue 14       2h  0m ( 4 sessions)  ████████████████
+Wed 15       1h 45m ( 4 sessions)  ██████████████
+Thu 16       1h 30m ( 3 sessions)  ████████████
+Fri 17       1h 45m ( 3 sessions)  ██████████████
+Sat 18            —
+Sun 19            —
 ```
 
 Start a focus session, close your terminal, open a new one, run `lockin` — your timer is still running. Lockin uses a background engine that persists through terminal sessions, SSH disconnects, and accidental `Ctrl+C`.
 
-**Features:**
+**Why Lockin?**
 - Sessions survive terminal close (background engine via LaunchAgent)
-- Detach and reattach anytime with `d` and `lockin`
-- Tracks your focus time with daily/weekly/monthly stats
+- Detach mid-session with `d`, reattach anytime with `lockin`
+- Tracks focus time with daily, weekly, and monthly stats
 - Configurable breaks with streak-based recommendations
 - macOS native notifications when sessions complete
 
+## Quick Start
+
 ```bash
-lockin 30           # Start 30-minute focus session
-lockin              # Attach to running session
-lockin stats week   # View weekly stats
+./install.sh               # Install (restart terminal after)
+
+lockin 30                   # Start 30-minute focus session
+lockin                      # Attach to running session
+lockin stats week           # View weekly stats
 ```
 
 ## Installation
