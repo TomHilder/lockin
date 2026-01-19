@@ -180,11 +180,32 @@ CLI ◀──poll state───── SQLite ◀──update─── Engine
 
 ## Troubleshooting
 
+### macOS Security Warnings
+
+macOS may flag Lockin because it installs a LaunchAgent (background process). This is expected behavior for a persistent timer.
+
+**"Cannot be opened because it is from an unidentified developer"** or similar:
+```bash
+# Remove quarantine flag from downloaded files
+xattr -r -d com.apple.quarantine install.sh uninstall.sh
+```
+
+**Corporate security software (CrowdStrike, etc.):**
+- The LaunchAgent at `~/Library/LaunchAgents/com.lockin.engine.plist` may be flagged
+- The Python process running from `~/.lockin/venv/` may be flagged
+- You may need to request an exception from IT, or run the engine manually instead:
+  ```bash
+  # Skip LaunchAgent, run engine in a terminal tab instead
+  lockin-engine
+  ```
+
+### General
+
 ```bash
 # Check if engine is running
 launchctl list | grep lockin
 
-# Start engine manually
+# Start engine manually (if LaunchAgent isn't working)
 lockin-engine
 
 # View logs
