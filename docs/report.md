@@ -186,6 +186,7 @@ The `install.sh` script:
 - No update mechanism
 - No way to install specific version
 - macOS security warnings (see below)
+- Not on PyPI or Homebrew (shell script installation only)
 
 ### Uninstallation: Good
 
@@ -274,7 +275,25 @@ Tasks to prepare for public release and community contributions.
 | Add issue templates (bug report, feature request) | 0.5 day | Medium |
 | Populate CHANGELOG.md | 0.5 day | Medium |
 
-### Phase 2: Polish (Medium Priority)
+### Phase 2: Distribution (Medium-High Priority)
+
+Make the tool easier to install for a wider audience.
+
+| Task | Effort | Impact |
+|------|--------|--------|
+| Add `lockin setup` command (replace install.sh logic) | 1 day | High |
+| Publish to PyPI | 0.5 day | High |
+| Add `lockin setup --uninstall` | 0.5 day | Medium |
+
+**Why `lockin setup`?** The current install.sh works but isn't compatible with standard Python distribution (pip/PyPI). Refactoring LaunchAgent installation into a CLI command enables `pip install lockin && lockin setup` — cleaner and more portable.
+
+**PyPI benefits:**
+- `pip install lockin` is familiar to Python users
+- Enables `pipx install lockin` for isolated installs
+- Automatic dependency resolution
+- Version management via pip
+
+### Phase 3: Polish (Medium Priority)
 
 Quality-of-life improvements.
 
@@ -285,7 +304,7 @@ Quality-of-life improvements.
 | Responsive progress bar width | 0.5 day | Low |
 | Add `lockin pause` command | 1 day | Medium |
 
-### Phase 3: Platform Expansion (Lower Priority)
+### Phase 4: Platform Expansion (Lower Priority)
 
 Broaden user base.
 
@@ -295,17 +314,20 @@ Broaden user base.
 | Windows support (Task Scheduler) | 2-3 days | Medium |
 | Docker/container support | 1 day | Low |
 
-### Phase 4: Features (Future)
+### Phase 5: Additional Distribution & Features (Future)
 
-Nice-to-have features for a more complete product.
+Nice-to-have features and broader distribution.
 
 | Task | Effort | Impact |
 |------|--------|--------|
+| Homebrew tap | 1 day | Medium |
 | Data backup/restore commands | 1 day | Medium |
 | Import from other timers | 1-2 days | Low |
 | Custom notification sounds | 0.5 day | Low |
 | Pomodoro preset mode | 1 day | Medium |
 | Menu bar status (macOS) | 2-3 days | Medium |
+
+**Homebrew tap**: Once PyPI distribution is working, a Homebrew tap (`brew install tomhilder/tap/lockin`) provides a more native macOS installation experience. Lower priority than PyPI since it's macOS-only and Homebrew users can still use pip.
 
 ---
 
