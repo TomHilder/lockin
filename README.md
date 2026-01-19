@@ -1,8 +1,19 @@
 # Lockin
 
-A macOS terminal focus timer with a persistent background engine.
+A terminal focus timer that doesn't die when you close the terminal.
 
-**Note:** This repo is mostly AI-generated and is a work in progress.
+```
+lockin 30
+```
+
+Start a focus session, close your terminal, grab coffee, open a new terminal, run `lockin` — your timer is still running. Lockin uses a background engine that persists through terminal sessions, SSH disconnects, and accidental `Ctrl+C`.
+
+**Features:**
+- Sessions survive terminal close (background engine via LaunchAgent)
+- Detach and reattach anytime with `d` and `lockin`
+- Tracks your focus time with daily/weekly/monthly stats
+- Configurable breaks with streak-based recommendations
+- macOS native notifications when sessions complete
 
 ```bash
 lockin 30           # Start 30-minute focus session
