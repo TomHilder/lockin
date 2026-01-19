@@ -271,7 +271,7 @@ class Engine:
         
         if self.state['session_state'] == SessionState.RUNNING:
             now = time.time()
-            
+
             # Check if planned time reached
             if now >= self.state['planned_end_time']:
                 # Send notification
@@ -280,11 +280,16 @@ class Engine:
                     f"Lockin - {session_type} complete",
                     f"Your {self.state['planned_duration_minutes']} minute {session_type} session is complete!"
                 )
-                
-                # Enter decision window
-                self.state['session_state'] = SessionState.AWAITING_DECISION
-                self.state['decision_window_start'] = now
-                self._save_state()
+
+                # For work sessions, check if overtime is enabled
+                if session_type == SessionType.WORK and not self.config.default_to_overtime:
+                    # End session immediately without overtime
+                    self.quit_session()
+                else:
+                    # Enter decision window
+                    self.state['session_state'] = SessionState.AWAITING_DECISION
+                    self.state['decision_window_start'] = now
+                    self._save_state()
         
         elif self.state['session_state'] == SessionState.AWAITING_DECISION:
             now = time.time()
@@ -297,14 +302,20 @@ class Engine:
                 self._save_state()
         
         elif self.state['session_state'] == SessionState.RUNNING_BONUS:
-            # For breaks, automatically end when long break duration reached
+            now = time.time()
+
             if self.state['session_type'] == SessionType.BREAK:
-                now = time.time()
+                # For breaks, automatically end when long break duration reached
                 elapsed_minutes = (now - self.state['start_time']) / 60
-                
                 if elapsed_minutes >= self.config.long_break_minutes:
-                    # Auto-end break
                     self.quit_session()
+            else:
+                # For work sessions, check overtime_max
+                overtime_max = self.config.overtime_max_minutes
+                if overtime_max > 0:
+                    overtime_minutes = (now - self.state['planned_end_time']) / 60
+                    if overtime_minutes >= overtime_max:
+                        self.quit_session()
     
     def process_commands(self):
         """Process pending commands from CLI."""

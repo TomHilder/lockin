@@ -12,6 +12,8 @@ DEFAULT_CONFIG = {
     'break_scrap_threshold_minutes': 2,  # Min break time to log
     'decision_window_minutes': 3,  # Time to decide after session completes
     'auto_attach': False,  # Automatically attach to session after starting
+    'default_to_overtime': True,  # Enter overtime mode when work session ends
+    'overtime_max_minutes': 0,  # Max overtime minutes before auto-end (0 = unlimited)
 }
 
 
@@ -62,7 +64,8 @@ class Config:
         elif isinstance(default_value, (int, float)):
             try:
                 num_value = float(value)
-                if num_value <= 0:
+                # overtime_max_minutes allows 0 (meaning unlimited)
+                if num_value < 0 or (num_value == 0 and key != 'overtime_max_minutes'):
                     raise ValueError(f"{key} must be positive")
 
                 # Set reasonable maximums
@@ -122,3 +125,11 @@ class Config:
     @property
     def auto_attach(self) -> bool:
         return bool(self.get('auto_attach'))
+
+    @property
+    def default_to_overtime(self) -> bool:
+        return bool(self.get('default_to_overtime'))
+
+    @property
+    def overtime_max_minutes(self) -> int:
+        return int(self.get('overtime_max_minutes'))

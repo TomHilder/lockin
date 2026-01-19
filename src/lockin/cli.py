@@ -170,10 +170,17 @@ class LockinUI:
                 else:  # Break
                     break_threshold = self.config.break_scrap_threshold_minutes
                     elapsed_minutes = elapsed / 60
+                    is_short = planned_duration == self.config.short_break_minutes
+                    is_long = planned_duration == self.config.long_break_minutes
+                    switch_opts = ""
+                    if not is_short:
+                        switch_opts += "   \\[s] switch to short"
+                    if not is_long:
+                        switch_opts += "   \\[l] switch to long"
                     if elapsed_minutes < break_threshold:
-                        elements.append(Text.from_markup("[dim]\\[q] end (scrap)   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]"))
+                        elements.append(Text.from_markup(f"[dim]\\[q] end (scrap){switch_opts}   \\[d] detach[/dim]"))
                     else:
-                        elements.append(Text.from_markup("[dim]\\[q] end break   \\[s] switch to short   \\[l] switch to long   \\[d] detach[/dim]"))
+                        elements.append(Text.from_markup(f"[dim]\\[q] end break{switch_opts}   \\[d] detach[/dim]"))
             elif session_state == SessionState.RUNNING_BONUS:
                 if session_type == SessionType.WORK:
                     break_label = self.get_recommended_break_type()
