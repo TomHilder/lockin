@@ -230,6 +230,10 @@ uv pip install -e ".[dev]"
 uv run pytest tests/ -v
 ```
 
+## Project Status
+
+For a detailed assessment of the project (features, limitations, known issues) and a prioritized roadmap, see [docs/report.md](docs/report.md).
+
 ## License
 
 MIT - see [LICENSE](LICENSE)
