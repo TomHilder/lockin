@@ -68,6 +68,16 @@ lockin stats month     # This month
 lockin stats year      # This year
 ```
 
+### Session Log
+
+```bash
+lockin log             # Show 10 most recent sessions
+lockin log 20          # Show 20 most recent sessions
+lockin log --work      # Show only work sessions
+lockin log --break     # Show only break sessions
+lockin log 5 --work    # Show 5 most recent work sessions
+```
+
 ### Configuration
 
 ```bash
