@@ -13,7 +13,7 @@ DEFAULT_CONFIG = {
     'decision_window_minutes': 3,  # Time to decide after session completes
     'auto_attach': False,  # Automatically attach to session after starting
     'default_to_overtime': True,  # Enter overtime mode when work session ends
-    'overtime_max_minutes': 0,  # Max overtime minutes before auto-end (0 = unlimited)
+    'overtime_max_minutes': 60,  # Max overtime minutes before auto-end (0 = unlimited)
 }
 
 

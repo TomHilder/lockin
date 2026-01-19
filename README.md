@@ -86,7 +86,14 @@ lockin config reset                  # Reset to defaults
 | `decision_window_minutes` | 3 | Time to decide after completion |
 | `auto_attach` | false | Auto-attach after starting session |
 | `default_to_overtime` | true | Enter overtime mode when session ends |
-| `overtime_max_minutes` | 0 | Max overtime before auto-end (0=unlimited) |
+| `overtime_max_minutes` | 60 | Max overtime before auto-end (0=unlimited) |
+
+### Overtime Behavior
+
+When a work session's planned time ends, you enter a decision window where you can quit, take a break, or continue working. If you don't decide within `decision_window_minutes`, the session automatically continues into "overtime" (bonus time).
+
+- **`default_to_overtime`**: Set to `false` to skip overtime entirely—sessions end and log automatically when time is up.
+- **`overtime_max_minutes`**: Caps how long overtime can last. After this, the session auto-ends. Set to `0` for unlimited overtime.
 
 ## How It Works
 
