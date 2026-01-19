@@ -87,7 +87,11 @@ Examples:
         console.print("Start the engine with: [cyan]lockin-engine[/cyan]")
         console.print("Or install as LaunchAgent for automatic startup")
         console.print()
-    
+
+    # Warn if --scrap used with non-quit command
+    if args.scrap and args.duration != 'quit':
+        console.print("[dim]--scrap flag ignored (only applies to quit)[/dim]")
+
     # Parse command
     
     # No arguments - show dashboard or attach
