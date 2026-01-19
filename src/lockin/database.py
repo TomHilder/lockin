@@ -113,6 +113,24 @@ class Database:
             """)
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    def get_recent_sessions(self, limit: int = 10, session_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get the N most recent sessions, optionally filtered by type."""
+        with self.connection() as conn:
+            if session_type:
+                cursor = conn.execute("""
+                    SELECT * FROM sessions
+                    WHERE session_type = ?
+                    ORDER BY start_time DESC
+                    LIMIT ?
+                """, (session_type, limit))
+            else:
+                cursor = conn.execute("""
+                    SELECT * FROM sessions
+                    ORDER BY start_time DESC
+                    LIMIT ?
+                """, (limit,))
+            return [dict(row) for row in cursor.fetchall()]
     
     def get_todays_stats(self) -> Dict[str, Any]:
         """Get today's session statistics."""

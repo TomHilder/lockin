@@ -667,3 +667,55 @@ class LockinUI:
         console.print()
         console.print("[dim]To change: lockin config <key> <value>[/dim]")
         console.print("[dim]To reset: lockin config reset[/dim]")
+
+    def show_log(self, limit: int = 10, session_type: Optional[str] = None):
+        """Display recent session log."""
+        sessions = self.db.get_recent_sessions(limit, session_type)
+
+        if not sessions:
+            filter_msg = f" {session_type}" if session_type else ""
+            console.print(f"[dim]No{filter_msg} sessions logged yet[/dim]")
+            return
+
+        # Header
+        filter_label = f" ({session_type})" if session_type else ""
+        console.print(Panel.fit(
+            f"[bold cyan]LOCKIN[/bold cyan] — Recent Sessions{filter_label}",
+            border_style="cyan"
+        ))
+        console.print()
+
+        # Table
+        table = Table(show_header=True, box=box.ROUNDED, border_style="cyan")
+        table.add_column("#", style="dim", justify="right")
+        table.add_column("Type", style="bold")
+        table.add_column("Duration", justify="right")
+        table.add_column("Status")
+        table.add_column("Date", style="dim")
+
+        for i, session in enumerate(sessions, 1):
+            session_type_str = session['session_type'].capitalize()
+            duration = int(session['actual_duration_minutes'])
+            state = session['state']
+            start_time = datetime.fromtimestamp(session['start_time'])
+
+            # Color the status
+            if state == 'completed':
+                status = "[green]completed[/green]"
+            elif state == 'abandoned':
+                status = "[yellow]abandoned[/yellow]"
+            else:
+                status = f"[dim]{state}[/dim]"
+
+            # Format date
+            today = datetime.now().date()
+            if start_time.date() == today:
+                date_str = f"today {start_time.strftime('%H:%M')}"
+            elif start_time.date() == today - timedelta(days=1):
+                date_str = f"yesterday {start_time.strftime('%H:%M')}"
+            else:
+                date_str = start_time.strftime('%Y-%m-%d %H:%M')
+
+            table.add_row(str(i), session_type_str, f"{duration} min", status, date_str)
+
+        console.print(table)

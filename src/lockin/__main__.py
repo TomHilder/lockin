@@ -63,6 +63,8 @@ Examples:
   lockin quit         # End session (if past threshold)
   lockin quit --scrap # Force end session
   lockin stats week   # Show this week's stats
+  lockin log          # Show 10 most recent sessions
+  lockin log 5 --work # Show 5 most recent work sessions
   lockin config       # Show configuration
         """
     )
@@ -75,6 +77,10 @@ Examples:
                        help='Date for stats (DDMMYY for week/month, YYYY for year)')
     parser.add_argument('--scrap', action='store_true',
                        help='Force quit session even if below minimum threshold')
+    parser.add_argument('--work', action='store_true',
+                       help='Filter log to work sessions only')
+    parser.add_argument('--break', dest='break_only', action='store_true',
+                       help='Filter log to break sessions only')
 
     args = parser.parse_args()
 
@@ -91,6 +97,10 @@ Examples:
     # Warn if --scrap used with non-quit command
     if args.scrap and args.duration != 'quit':
         console.print("[dim]--scrap flag ignored (only applies to quit)[/dim]")
+
+    # Warn if --work/--break used with non-log command
+    if (args.work or args.break_only) and args.duration != 'log':
+        console.print("[dim]--work/--break flags ignored (only apply to log)[/dim]")
 
     # Parse command
     
@@ -109,10 +119,37 @@ Examples:
             console.print(f"[red]Invalid period: {period}[/red]")
             console.print("Valid periods: week, month, year")
             return
-        
+
         ui.show_stats(period, args.date)
         return
-    
+
+    # Log command
+    if args.duration == 'log':
+        # Parse limit (default 10)
+        limit = 10
+        if args.break_duration:
+            try:
+                limit = int(args.break_duration)
+                if limit < 1:
+                    console.print("[red]Limit must be at least 1[/red]")
+                    return
+            except ValueError:
+                console.print(f"[red]Invalid limit: {args.break_duration}[/red]")
+                return
+
+        # Determine filter
+        session_type = None
+        if args.work and args.break_only:
+            console.print("[yellow]Cannot use both --work and --break[/yellow]")
+            return
+        elif args.work:
+            session_type = 'work'
+        elif args.break_only:
+            session_type = 'break'
+
+        ui.show_log(limit, session_type)
+        return
+
     # Config command
     if args.duration == 'config':
         if not args.break_duration:
