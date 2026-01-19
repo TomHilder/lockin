@@ -85,6 +85,8 @@ lockin config reset                  # Reset to defaults
 | `break_scrap_threshold_minutes` | 2 | Min time to log breaks |
 | `decision_window_minutes` | 3 | Time to decide after completion |
 | `auto_attach` | false | Auto-attach after starting session |
+| `default_to_overtime` | true | Enter overtime mode when session ends |
+| `overtime_max_minutes` | 0 | Max overtime before auto-end (0=unlimited) |
 
 ## How It Works
 
