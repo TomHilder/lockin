@@ -65,6 +65,7 @@ Examples:
   lockin stats week   # Show this week's stats
   lockin log          # Show 10 most recent sessions
   lockin log 5 --work # Show 5 most recent work sessions
+  lockin delete 1     # Delete most recent session (with confirmation)
   lockin config       # Show configuration
         """
     )
@@ -148,6 +149,23 @@ Examples:
             session_type = 'break'
 
         ui.show_log(limit, session_type)
+        return
+
+    # Delete command
+    if args.duration == 'delete':
+        if not args.break_duration:
+            console.print("[red]Usage: lockin delete <position>[/red]")
+            console.print("[dim]Position corresponds to # in 'lockin log' (1 = most recent)[/dim]")
+            return
+
+        try:
+            position = int(args.break_duration)
+        except ValueError:
+            console.print(f"[red]Invalid position: {args.break_duration}[/red]")
+            console.print("[dim]Position must be a number from 'lockin log'[/dim]")
+            return
+
+        ui.delete_session(position)
         return
 
     # Config command

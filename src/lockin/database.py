@@ -131,6 +131,12 @@ class Database:
                     LIMIT ?
                 """, (limit,))
             return [dict(row) for row in cursor.fetchall()]
+
+    def delete_session(self, session_id: int) -> bool:
+        """Delete a session by its database ID. Returns True if deleted."""
+        with self.connection() as conn:
+            cursor = conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+            return cursor.rowcount > 0
     
     def get_todays_stats(self) -> Dict[str, Any]:
         """Get today's session statistics."""

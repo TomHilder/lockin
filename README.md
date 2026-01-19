@@ -78,6 +78,17 @@ lockin log --break     # Show only break sessions
 lockin log 5 --work    # Show 5 most recent work sessions
 ```
 
+### Deleting Sessions
+
+```bash
+lockin delete 1        # Delete most recent session
+lockin delete 3        # Delete 3rd most recent session
+```
+
+The position number corresponds to the `#` column in `lockin log`. Deletion always uses the unfiltered log (ignores `--work`/`--break` filters). You'll be asked to confirm before deletion.
+
+**Note:** After deleting a session, the position numbers shift—what was #3 becomes #2, etc.
+
 ### Configuration
 
 ```bash

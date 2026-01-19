@@ -719,3 +719,56 @@ class LockinUI:
             table.add_row(str(i), session_type_str, f"{duration} min", status, date_str)
 
         console.print(table)
+
+    def delete_session(self, position: int) -> bool:
+        """Delete a session by its position in the unfiltered log (1 = most recent).
+
+        Shows confirmation prompt. Returns True if deleted.
+        """
+        # Get unfiltered sessions to find the one at this position
+        sessions = self.db.get_recent_sessions(limit=position)
+
+        if position < 1 or position > len(sessions):
+            console.print(f"[red]Invalid position: {position}[/red]")
+            console.print(f"[dim]Use 'lockin log' to see valid positions (1-{len(sessions) if sessions else 'N'})[/dim]")
+            return False
+
+        session = sessions[position - 1]
+
+        # Format session info for confirmation
+        session_type = session['session_type'].capitalize()
+        duration = int(session['actual_duration_minutes'])
+        state = session['state']
+        start_time = datetime.fromtimestamp(session['start_time'])
+
+        today = datetime.now().date()
+        if start_time.date() == today:
+            date_str = f"today {start_time.strftime('%H:%M')}"
+        elif start_time.date() == today - timedelta(days=1):
+            date_str = f"yesterday {start_time.strftime('%H:%M')}"
+        else:
+            date_str = start_time.strftime('%Y-%m-%d %H:%M')
+
+        # Show what will be deleted
+        console.print(f"[bold]Delete this session?[/bold]")
+        console.print(f"  {session_type} · {duration} min · {state} · {date_str}")
+        console.print()
+
+        # Ask for confirmation
+        try:
+            response = input("Type 'y' to confirm: ").strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            console.print("\n[dim]Cancelled[/dim]")
+            return False
+
+        if response != 'y':
+            console.print("[dim]Cancelled[/dim]")
+            return False
+
+        # Delete
+        if self.db.delete_session(session['id']):
+            console.print("[green]Session deleted[/green]")
+            return True
+        else:
+            console.print("[red]Failed to delete session[/red]")
+            return False
