@@ -261,7 +261,64 @@ Hard dependencies on:
 
 ---
 
-## 8. Prioritized Roadmap
+## 8. AI-Assisted Development
+
+This project is entirely AI-generated and managed (with human direction). This creates unique considerations for long-term maintainability.
+
+### Current State
+
+**What works well:**
+- `CLAUDE.md` provides project context and development commands
+- `ARCHITECTURE.md` documents design decisions and patterns
+- Consistent commit message format (`[component] description`)
+- Clear module separation makes targeted changes easier
+- Tests verify core functionality works
+
+**What's missing:**
+
+| Gap | Risk | Solution |
+|-----|------|----------|
+| No release process documentation | AI won't know how to version/tag releases | Document in CLAUDE.md |
+| No CI operation guide | AI won't know how to interpret/fix CI failures | Document expected CI behavior |
+| No PyPI publishing guide | AI won't know how to publish new versions | Document publishing steps |
+| CHANGELOG not maintained | AI has no record of what changed when | Keep CHANGELOG updated |
+| No "how to debug" guide | AI may struggle with production issues | Document common debugging steps |
+
+### The Context Loss Problem
+
+When a new AI session starts, context is empty. The AI must reconstruct understanding from:
+1. Source code
+2. Documentation (README, CLAUDE.md, ARCHITECTURE.md)
+3. Git history
+4. Test output
+
+**Current gaps that cause friction:**
+- No documented release/versioning procedure
+- No guide for "how to ship a fix to PyPI" (once published)
+- No incident response guide ("user reports X, here's how to debug")
+- Test coverage is low, so AI can't verify changes don't break things
+
+### Recommendations for AI Maintainability
+
+1. **Expand CLAUDE.md** with operational procedures:
+   - How to create a release (version bump, tag, publish)
+   - How to interpret and fix CI failures
+   - How to debug common issues
+
+2. **Keep CHANGELOG.md updated** — serves as institutional memory
+
+3. **Increase test coverage** — gives AI confidence that changes work
+
+4. **Document "recipes"** for common tasks:
+   - Adding a new CLI command
+   - Adding a new config option
+   - Debugging engine state issues
+
+5. **Use descriptive commit messages** — AI can learn from git history
+
+---
+
+## 9. Prioritized Roadmap
 
 ### Phase 1: Release Readiness (High Priority)
 
@@ -274,6 +331,8 @@ Tasks to prepare for public release and community contributions.
 | Add engine unit tests | 1-2 days | High |
 | Add issue templates (bug report, feature request) | 0.5 day | Medium |
 | Populate CHANGELOG.md | 0.5 day | Medium |
+| Document release process in CLAUDE.md | 0.5 day | Medium |
+| Document CI expectations in CLAUDE.md | 0.5 day | Medium |
 
 ### Phase 2: Distribution (Medium-High Priority)
 
@@ -331,7 +390,7 @@ Nice-to-have features and broader distribution.
 
 ---
 
-## Summary Metrics
+## 10. Summary Metrics
 
 | Metric | Value |
 |--------|-------|
@@ -342,10 +401,11 @@ Nice-to-have features and broader distribution.
 | Config options | 9 |
 | CLI commands | 8 |
 | Supported platforms | 1 (macOS) |
+| Human-written code | 0% |
 
 ---
 
-## Recommendations for Future Development
+## 11. Recommendations for Future Development
 
 1. **Set up GitHub Actions first** — CI is table stakes for open source. Even a simple "run pytest on push" catches issues and signals project health to potential users.
 
@@ -353,12 +413,14 @@ Nice-to-have features and broader distribution.
 
 3. **Write engine tests** — The state machine is the heart of the app. Tests catch regressions and document expected behavior for contributors.
 
-4. **Keep the README focused** — The current README is appropriately concise. Resist the urge to document every edge case there.
+4. **Document operational procedures** — Every new system (CI, PyPI, versioning) needs a corresponding update to CLAUDE.md so future AI sessions know how to operate it.
 
-5. **Don't over-engineer** — The current architecture handles its scope well. Resist adding complexity unless there's clear user demand.
+5. **Keep CHANGELOG.md current** — This is institutional memory. When context is lost, the changelog tells the story of what changed and why.
 
-6. **Linux support is high-value** — Many terminal-focused developers use Linux. The architecture is portable; only LaunchAgent and osascript need platform alternatives.
+6. **Don't over-engineer** — The current architecture handles its scope well. Resist adding complexity unless there's clear user demand.
+
+7. **Linux support is high-value** — Many terminal-focused developers use Linux. The architecture is portable; only LaunchAgent and osascript need platform alternatives.
 
 ---
 
-*This report assesses the Lockin project as of January 2026. It is intended to guide development prioritization and inform potential contributors about the project's current state.*
+*This report assesses the Lockin project as of January 2026. It is intended to guide development prioritization and inform potential contributors (human or AI) about the project's current state.*
