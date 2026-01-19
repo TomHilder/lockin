@@ -62,7 +62,9 @@ Examples:
   lockin break long   # Start long break (from config)
   lockin quit         # End session (if past threshold)
   lockin quit --scrap # Force end session
-  lockin stats week   # Show this week's stats
+  lockin stats week   # Stats for this week
+  lockin stats month  # Stats for this month
+  lockin stats year   # Stats for this year
   lockin log          # Show 10 most recent sessions
   lockin log 5 --work # Show 5 most recent work sessions
   lockin delete 1     # Delete most recent session (with confirmation)
