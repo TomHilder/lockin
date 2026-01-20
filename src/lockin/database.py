@@ -44,26 +44,26 @@ class Database:
                     planned_duration_minutes INTEGER NOT NULL,
                     actual_duration_minutes REAL,
                     overtime_minutes REAL DEFAULT 0,
-                    created_at REAL NOT NULL DEFAULT (unixepoch('subsec'))
+                    created_at REAL
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS config (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL,
-                    updated_at REAL NOT NULL DEFAULT (unixepoch('subsec'))
+                    updated_at REAL
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS engine_state (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     current_state TEXT,  -- JSON serialized state
-                    updated_at REAL NOT NULL DEFAULT (unixepoch('subsec'))
+                    updated_at REAL
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS commands (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     command TEXT NOT NULL,
                     args TEXT,  -- JSON
-                    created_at REAL NOT NULL DEFAULT (unixepoch('subsec')),
+                    created_at REAL,
                     processed INTEGER DEFAULT 0
                 );
                 
@@ -94,8 +94,8 @@ class Database:
                 INSERT INTO sessions (
                     session_type, state, start_time, end_time,
                     planned_duration_minutes, actual_duration_minutes,
-                    overtime_minutes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    overtime_minutes, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     session_type,
@@ -105,6 +105,7 @@ class Database:
                     planned_duration_minutes,
                     actual_duration_minutes,
                     bonus_minutes,
+                    time.time(),
                 ),
             )  # Pass bonus_minutes to overtime_minutes field for DB compatibility
 
@@ -280,12 +281,16 @@ class Database:
             conn.execute(
                 """
                 INSERT INTO config (key, value, updated_at)
-                VALUES (?, ?, unixepoch('subsec'))
+                VALUES (?, ?, ?)
                 ON CONFLICT(key) DO UPDATE SET
                     value = excluded.value,
                     updated_at = excluded.updated_at
             """,
-                (key, json.dumps(value) if not isinstance(value, str) else value),
+                (
+                    key,
+                    json.dumps(value) if not isinstance(value, str) else value,
+                    time.time(),
+                ),
             )
 
     def get_all_config(self) -> Dict[str, Any]:
@@ -322,12 +327,12 @@ class Database:
             conn.execute(
                 """
                 INSERT INTO engine_state (id, current_state, updated_at)
-                VALUES (1, ?, unixepoch('subsec'))
+                VALUES (1, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     current_state = excluded.current_state,
                     updated_at = excluded.updated_at
             """,
-                (json.dumps(state),),
+                (json.dumps(state), time.time()),
             )
 
     def clear_engine_state(self):
@@ -342,10 +347,10 @@ class Database:
         with self.connection() as conn:
             conn.execute(
                 """
-                INSERT INTO commands (command, args)
-                VALUES (?, ?)
+                INSERT INTO commands (command, args, created_at)
+                VALUES (?, ?, ?)
             """,
-                (command, json.dumps(args) if args else None),
+                (command, json.dumps(args) if args else None, time.time()),
             )
 
     def get_pending_commands(self) -> List[Dict[str, Any]]:
