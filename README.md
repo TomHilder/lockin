@@ -79,6 +79,7 @@ Restart your terminal or `source ~/.zshrc`.
 # Work sessions
 lockin 25              # 25-minute focus
 lockin 90              # 90-minute deep work
+lockin work            # Start with default duration (from config)
 
 # Breaks
 lockin break short     # Short break (5 min default)
@@ -112,6 +113,7 @@ lockin quit --scrap    # Force end regardless of time
 | `q` | End break |
 | `s` | Switch to short break |
 | `l` | Switch to long break |
+| `w` | End break and start work session |
 
 ### Statistics
 
@@ -155,6 +157,7 @@ lockin config reset                  # Reset to defaults
 | `short_break_minutes` | 5 | Short break duration |
 | `long_break_minutes` | 15 | Long break duration |
 | `long_break_every` | 4 | Long break every N sessions |
+| `default_work_minutes` | 25 | Default work session duration |
 | `abandon_threshold_minutes` | 5 | Min time to log work sessions |
 | `break_scrap_threshold_minutes` | 2 | Min time to log breaks |
 | `decision_window_minutes` | 3 | Time to decide after work session |

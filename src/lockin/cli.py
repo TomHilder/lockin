@@ -174,19 +174,22 @@ class LockinUI:
                     is_long = planned_duration == self.config.long_break_minutes
                     switch_opts = ""
                     if not is_short:
-                        switch_opts += "   \\[s] switch to short"
+                        switch_opts += "   \\[s] short"
                     if not is_long:
-                        switch_opts += "   \\[l] switch to long"
+                        switch_opts += "   \\[l] long"
+                    work_mins = self.config.default_work_minutes
+                    work_opt = f"   \\[w] work ({work_mins}m)"
                     if elapsed_minutes < break_threshold:
-                        elements.append(Text.from_markup(f"[dim]\\[q] end (scrap){switch_opts}   \\[d] detach[/dim]"))
+                        elements.append(Text.from_markup(f"[dim]\\[q] end (scrap){switch_opts}{work_opt}   \\[d] detach[/dim]"))
                     else:
-                        elements.append(Text.from_markup(f"[dim]\\[q] end break{switch_opts}   \\[d] detach[/dim]"))
+                        elements.append(Text.from_markup(f"[dim]\\[q] end{switch_opts}{work_opt}   \\[d] detach[/dim]"))
             elif session_state == SessionState.RUNNING_BONUS:
                 if session_type == SessionType.WORK:
                     break_label = self.get_recommended_break_type()
                     elements.append(Text.from_markup(f"[dim]\\[q] quit (end)   \\[b/B] break ({break_label}/custom)   \\[d] detach[/dim]"))
                 else:
-                    elements.append(Text.from_markup("[dim]\\[q] end break   \\[d] detach[/dim]"))
+                    work_mins = self.config.default_work_minutes
+                    elements.append(Text.from_markup(f"[dim]\\[q] end   \\[w] work ({work_mins}m)   \\[d] detach[/dim]"))
             elements.append(Text())  # Extra newline before cursor
 
         return Group(*elements)
@@ -402,6 +405,18 @@ class LockinUI:
                             self.queue_command('switch_break', break_type='short')
                         elif key == 'l' and session_type == SessionType.BREAK:
                             self.queue_command('switch_break', break_type='long')
+                        elif key == 'w' and session_type == SessionType.BREAK:
+                            # End break and start work session
+                            self.queue_command('quit_session')
+                            time.sleep(0.5)
+                            duration = self.config.default_work_minutes
+                            self.queue_command('start_session',
+                                             session_type='work',
+                                             duration_minutes=duration)
+                            if not self.config.auto_attach:
+                                exit_message = f"[green]Work session started ({duration}m)[/green]"
+                                break
+                            # Otherwise loop continues and picks up new session
 
             # Handle custom break prompt outside Live context
             if custom_break_requested:

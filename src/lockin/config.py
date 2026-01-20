@@ -8,6 +8,7 @@ DEFAULT_CONFIG = {
     'short_break_minutes': 5,
     'long_break_minutes': 15,
     'long_break_every': 4,  # After every 4th completed work session
+    'default_work_minutes': 25,  # Default work session duration
     'abandon_threshold_minutes': 5,  # Min time to count as abandoned vs scrapped
     'break_scrap_threshold_minutes': 2,  # Min break time to log
     'decision_window_minutes': 3,  # Time to decide after session completes
@@ -110,6 +111,10 @@ class Config:
     @property
     def long_break_every(self) -> int:
         return int(self.get('long_break_every'))
+
+    @property
+    def default_work_minutes(self) -> int:
+        return int(self.get('default_work_minutes'))
     
     @property
     def abandon_threshold_minutes(self) -> int:

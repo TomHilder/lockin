@@ -57,6 +57,7 @@ def main():
 Examples:
   lockin              # Show dashboard or attach to running session
   lockin 30           # Start 30-minute work session
+  lockin work         # Start work session with default duration
   lockin break 5      # Start 5-minute break
   lockin break short  # Start short break (from config)
   lockin break long   # Start long break (from config)
@@ -276,7 +277,26 @@ Examples:
         else:
             console.print("Attach with: [cyan]lockin[/cyan]")
         return
-    
+
+    # Work command (default duration)
+    if args.duration == 'work':
+        config = Config(ui.db)
+        duration = config.default_work_minutes
+
+        # Check if session already running
+        if state and state['session_state'] not in ['idle', 'ended']:
+            console.print("[yellow]A session is already running[/yellow]")
+            console.print("Quit it first with [cyan]q[/cyan] in the session view")
+            return
+
+        ui.queue_command('start_session', session_type='work', duration_minutes=duration)
+        console.print(f"[green]Started {duration}-minute work session[/green]")
+        if config.auto_attach:
+            ui.attach_to_session(wait_for_session=True)
+        else:
+            console.print("Attach with: [cyan]lockin[/cyan]")
+        return
+
     # Work session (numeric duration)
     try:
         duration = int(args.duration)
