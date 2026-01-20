@@ -157,21 +157,21 @@ lockin config reset                  # Reset to defaults
 | `short_break_minutes` | 5 | Short break duration |
 | `long_break_minutes` | 15 | Long break duration |
 | `long_break_every` | 4 | Long break every N sessions |
-| `default_work_minutes` | 25 | Default work session duration |
-| `abandon_threshold_minutes` | 5 | Min time to log work sessions |
-| `break_scrap_threshold_minutes` | 2 | Min time to log breaks |
-| `decision_window_minutes` | 3 | Time to decide after work session |
+| `work_default_minutes` | 25 | Default work session duration |
+| `min_work_minutes` | 5 | Min time to log work sessions |
+| `min_break_minutes` | 2 | Min time to log breaks |
+| `work_decision_minutes` | 3 | Decision window after work session |
 | `auto_attach` | false | Auto-attach after starting session |
-| `default_to_overtime` | true | Enter overtime mode when work session ends |
-| `overtime_max_minutes` | 60 | Max work overtime before auto-end (0=unlimited) |
+| `work_overtime_enabled` | true | Enter overtime when work session ends |
+| `work_overtime_max_minutes` | 60 | Max work overtime before auto-end (0=unlimited) |
 | `break_overtime_contributes` | false | Whether break overtime counts toward logged time |
 
 ### Overtime Behavior
 
-**Work sessions:** When planned time ends, you enter a decision window where you can quit, take a break, or continue working. If you don't decide within `decision_window_minutes`, the session automatically continues into "overtime" (bonus time).
+**Work sessions:** When planned time ends, you enter a decision window where you can quit, take a break, or continue working. If you don't decide within `work_decision_minutes`, the session automatically continues into "overtime" (bonus time).
 
-- **`default_to_overtime`**: Set to `false` to skip overtime entirely—work sessions end and log automatically when time is up.
-- **`overtime_max_minutes`**: Caps how long work overtime can last. After this, the session auto-ends. Set to `0` for unlimited overtime.
+- **`work_overtime_enabled`**: Set to `false` to skip overtime entirely—work sessions end and log automatically when time is up.
+- **`work_overtime_max_minutes`**: Caps how long work overtime can last. After this, the session auto-ends. Set to `0` for unlimited overtime.
 
 **Breaks:** When planned time ends, a notification fires and the timer shows overtime, but you must manually quit. There's no decision window for breaks.
 

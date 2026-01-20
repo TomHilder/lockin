@@ -7,14 +7,14 @@ from .database import Database
 DEFAULT_CONFIG = {
     'short_break_minutes': 5,
     'long_break_minutes': 15,
-    'long_break_every': 4,  # After every 4th completed work session
-    'default_work_minutes': 25,  # Default work session duration
-    'abandon_threshold_minutes': 5,  # Min time to count as abandoned vs scrapped
-    'break_scrap_threshold_minutes': 2,  # Min break time to log
-    'decision_window_minutes': 3,  # Time to decide after session completes
-    'auto_attach': False,  # Automatically attach to session after starting
-    'default_to_overtime': True,  # Enter overtime mode when work session ends
-    'overtime_max_minutes': 60,  # Max overtime minutes before auto-end (0 = unlimited)
+    'long_break_every': 4,  # Long break after every N work sessions
+    'work_default_minutes': 25,  # Default work session duration
+    'min_work_minutes': 5,  # Min work time to log (else scrapped)
+    'min_break_minutes': 2,  # Min break time to log (else scrapped)
+    'work_decision_minutes': 3,  # Decision window after work session completes
+    'auto_attach': False,  # Auto-attach to session after starting
+    'work_overtime_enabled': True,  # Enter overtime when work session ends
+    'work_overtime_max_minutes': 60,  # Max work overtime before auto-end (0 = unlimited)
     'break_overtime_contributes': False,  # Whether break overtime counts toward logged time
 }
 
@@ -66,8 +66,8 @@ class Config:
         elif isinstance(default_value, (int, float)):
             try:
                 num_value = float(value)
-                # overtime_max_minutes allows 0 (meaning unlimited)
-                if num_value < 0 or (num_value == 0 and key != 'overtime_max_minutes'):
+                # work_overtime_max_minutes allows 0 (meaning unlimited)
+                if num_value < 0 or (num_value == 0 and key != 'work_overtime_max_minutes'):
                     raise ValueError(f"{key} must be positive")
 
                 # Set reasonable maximums
@@ -113,32 +113,32 @@ class Config:
         return int(self.get('long_break_every'))
 
     @property
-    def default_work_minutes(self) -> int:
-        return int(self.get('default_work_minutes'))
-    
+    def work_default_minutes(self) -> int:
+        return int(self.get('work_default_minutes'))
+
     @property
-    def abandon_threshold_minutes(self) -> int:
-        return int(self.get('abandon_threshold_minutes'))
-    
+    def min_work_minutes(self) -> int:
+        return int(self.get('min_work_minutes'))
+
     @property
-    def break_scrap_threshold_minutes(self) -> int:
-        return int(self.get('break_scrap_threshold_minutes'))
-    
+    def min_break_minutes(self) -> int:
+        return int(self.get('min_break_minutes'))
+
     @property
-    def decision_window_minutes(self) -> int:
-        return int(self.get('decision_window_minutes'))
+    def work_decision_minutes(self) -> int:
+        return int(self.get('work_decision_minutes'))
 
     @property
     def auto_attach(self) -> bool:
         return bool(self.get('auto_attach'))
 
     @property
-    def default_to_overtime(self) -> bool:
-        return bool(self.get('default_to_overtime'))
+    def work_overtime_enabled(self) -> bool:
+        return bool(self.get('work_overtime_enabled'))
 
     @property
-    def overtime_max_minutes(self) -> int:
-        return int(self.get('overtime_max_minutes'))
+    def work_overtime_max_minutes(self) -> int:
+        return int(self.get('work_overtime_max_minutes'))
 
     @property
     def break_overtime_contributes(self) -> bool:

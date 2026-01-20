@@ -90,7 +90,7 @@ class LockinUI:
             time_label = "remaining"
         elif session_state == SessionState.AWAITING_DECISION:
             decision_start = state['decision_window_start']
-            decision_window = self.config.decision_window_minutes * 60
+            decision_window = self.config.work_decision_minutes * 60
             remaining = max(0, decision_window - (now - decision_start))
             time_label = "to decide"
         else:  # RUNNING_BONUS
@@ -126,7 +126,7 @@ class LockinUI:
             progress_pct = min(100, (elapsed / (planned_duration * 60)) * 100)
         elif session_state == SessionState.AWAITING_DECISION:
             decision_elapsed = now - state['decision_window_start']
-            decision_window = self.config.decision_window_minutes * 60
+            decision_window = self.config.work_decision_minutes * 60
             progress_pct = 100 - min(100, (decision_elapsed / decision_window) * 100)
         else:
             progress_pct = 100
@@ -161,14 +161,14 @@ class LockinUI:
                 elements.extend(self._make_decision_controls(state))
             elif session_state == SessionState.RUNNING:
                 if session_type == SessionType.WORK:
-                    abandon_threshold_minutes = self.config.abandon_threshold_minutes
+                    min_work_mins = self.config.min_work_minutes
                     elapsed_minutes = elapsed / 60
-                    if elapsed_minutes < abandon_threshold_minutes:
+                    if elapsed_minutes < min_work_mins:
                         elements.append(Text.from_markup("[dim]\\[q] quit (scrap)   \\[d] detach[/dim]"))
                     else:
                         elements.append(Text.from_markup("[dim]\\[q] quit (end early)   \\[d] detach[/dim]"))
                 else:  # Break
-                    break_threshold = self.config.break_scrap_threshold_minutes
+                    break_threshold = self.config.min_break_minutes
                     elapsed_minutes = elapsed / 60
                     is_short = planned_duration == self.config.short_break_minutes
                     is_long = planned_duration == self.config.long_break_minutes
@@ -177,7 +177,7 @@ class LockinUI:
                         switch_opts += "   \\[s] short"
                     if not is_long:
                         switch_opts += "   \\[l] long"
-                    work_mins = self.config.default_work_minutes
+                    work_mins = self.config.work_default_minutes
                     work_opt = f"   \\[w] work ({work_mins}m)"
                     if elapsed_minutes < break_threshold:
                         elements.append(Text.from_markup(f"[dim]\\[q] end (scrap){switch_opts}{work_opt}   \\[d] detach[/dim]"))
@@ -188,7 +188,7 @@ class LockinUI:
                     break_label = self.get_recommended_break_type()
                     elements.append(Text.from_markup(f"[dim]\\[q] quit (end)   \\[b/B] break ({break_label}/custom)   \\[d] detach[/dim]"))
                 else:
-                    work_mins = self.config.default_work_minutes
+                    work_mins = self.config.work_default_minutes
                     elements.append(Text.from_markup(f"[dim]\\[q] end   \\[w] work ({work_mins}m)   \\[d] detach[/dim]"))
             elements.append(Text())  # Extra newline before cursor
 
@@ -206,7 +206,7 @@ class LockinUI:
             # Show countdown
             now = time.time()
             decision_start = state['decision_window_start']
-            decision_window = self.config.decision_window_minutes * 60
+            decision_window = self.config.work_decision_minutes * 60
             remaining = max(0, decision_window - (now - decision_start))
             elements.append(Text.from_markup(f"[dim]Defaulting to continue in {format_time_remaining(remaining)}[/dim]"))
         else:
@@ -366,7 +366,7 @@ class LockinUI:
                             # Determine exit message
                             elapsed_minutes = (time.time() - state['start_time']) / 60
                             if session_type == SessionType.WORK:
-                                threshold = self.config.abandon_threshold_minutes
+                                threshold = self.config.min_work_minutes
                                 if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
                                     exit_message = "[green]Work session completed[/green]"
                                 elif elapsed_minutes < threshold:
@@ -374,7 +374,7 @@ class LockinUI:
                                 else:
                                     exit_message = "[green]Work session ended early (logged)[/green]"
                             else:  # Break
-                                threshold = self.config.break_scrap_threshold_minutes
+                                threshold = self.config.min_break_minutes
                                 if session_state in [SessionState.AWAITING_DECISION, SessionState.RUNNING_BONUS]:
                                     exit_message = "[green]Break completed[/green]"
                                 elif elapsed_minutes < threshold:
@@ -409,7 +409,7 @@ class LockinUI:
                             # End break and start work session
                             self.queue_command('quit_session')
                             time.sleep(0.5)
-                            duration = self.config.default_work_minutes
+                            duration = self.config.work_default_minutes
                             self.queue_command('start_session',
                                              session_type='work',
                                              duration_minutes=duration)

@@ -154,7 +154,7 @@ class Engine:
         bonus_minutes = 0
         
         if session_type == SessionType.WORK:
-            threshold = self.config.abandon_threshold_minutes
+            threshold = self.config.min_work_minutes
             
             # If we're in bonus time or awaiting_decision, we already completed the planned time
             if current_state in [SessionState.RUNNING_BONUS, SessionState.AWAITING_DECISION]:
@@ -172,7 +172,7 @@ class Engine:
                     log_state = 'abandoned'
         
         elif session_type == SessionType.BREAK:
-            threshold = self.config.break_scrap_threshold_minutes
+            threshold = self.config.min_break_minutes
             past_planned_time = now >= self.state['planned_end_time']
 
             if current_state == SessionState.RUNNING_BONUS or past_planned_time:
@@ -285,7 +285,7 @@ class Engine:
                     # User must manually quit
                     self.state['session_state'] = SessionState.RUNNING_BONUS
                     self._save_state()
-                elif not self.config.default_to_overtime:
+                elif not self.config.work_overtime_enabled:
                     # Work session with overtime disabled - end immediately
                     self.quit_session()
                 else:
@@ -296,7 +296,7 @@ class Engine:
         
         elif self.state['session_state'] == SessionState.AWAITING_DECISION:
             now = time.time()
-            decision_window = self.config.decision_window_minutes * 60
+            decision_window = self.config.work_decision_minutes * 60
             
             # Check if decision window expired
             if now - self.state['decision_window_start'] >= decision_window:
@@ -308,7 +308,7 @@ class Engine:
             # Breaks stay in RUNNING_BONUS until user manually quits
             # Work sessions check overtime_max
             if self.state['session_type'] == SessionType.WORK:
-                overtime_max = self.config.overtime_max_minutes
+                overtime_max = self.config.work_overtime_max_minutes
                 if overtime_max > 0:
                     now = time.time()
                     overtime_minutes = (now - self.state['planned_end_time']) / 60

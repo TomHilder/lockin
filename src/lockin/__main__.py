@@ -209,9 +209,9 @@ Examples:
 
         # Determine threshold
         if session_type == 'work':
-            threshold = config.abandon_threshold_minutes
+            threshold = config.min_work_minutes
         else:
-            threshold = config.break_scrap_threshold_minutes
+            threshold = config.min_break_minutes
 
         below_threshold = elapsed_minutes < threshold
 
@@ -281,7 +281,7 @@ Examples:
     # Work command (default duration)
     if args.duration == 'work':
         config = Config(ui.db)
-        duration = config.default_work_minutes
+        duration = config.work_default_minutes
 
         # Check if session already running
         if state and state['session_state'] not in ['idle', 'ended']:
