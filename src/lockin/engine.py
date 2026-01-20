@@ -173,8 +173,9 @@ class Engine:
         
         elif session_type == SessionType.BREAK:
             threshold = self.config.break_scrap_threshold_minutes
+            past_planned_time = now >= self.state['planned_end_time']
 
-            if current_state == SessionState.RUNNING_BONUS:
+            if current_state == SessionState.RUNNING_BONUS or past_planned_time:
                 should_log = True
                 log_state = 'completed'
                 # Cap duration at planned time unless break_overtime_contributes is enabled
@@ -182,11 +183,7 @@ class Engine:
                     actual_duration_minutes = min(actual_duration_minutes, planned_duration)
             elif actual_duration_minutes >= threshold:
                 should_log = True
-
-                if now >= self.state['planned_end_time']:
-                    log_state = 'completed'
-                else:
-                    log_state = 'ended_early'
+                log_state = 'ended_early'
         
         # Log if appropriate
         if should_log:
