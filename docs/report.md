@@ -19,7 +19,6 @@ Lockin is a macOS terminal-based focus timer with a persistent background engine
 **Weaknesses:**
 - Limited test coverage (database only, no CLI/engine tests)
 - macOS-only (uses LaunchAgent and osascript)
-- No CI/CD pipeline
 - No versioned releases
 
 ---
@@ -37,7 +36,7 @@ Lockin is a macOS terminal-based focus timer with a persistent background engine
 | Session persistence | ✅ | Survives terminal close, crashes |
 | macOS notifications | ✅ | Uses osascript |
 | Statistics | ✅ | Week/month/year views |
-| Configuration | ✅ | 9 config options with validation |
+| Configuration | ✅ | 11 config options with validation |
 | Session log | ✅ | View and delete recent sessions |
 | Streak tracking | ✅ | Today's streak with 60-min gap rule |
 
@@ -47,19 +46,21 @@ Lockin is a macOS terminal-based focus timer with a persistent background engine
 |---------|----------|
 | Running session | `q` quit, `d` detach |
 | Decision window | `q` quit, `b` break, `B` custom break, `c` continue |
-| Break session | `s` switch short, `l` switch long |
+| Break session | `q` quit, `s` switch short, `l` switch long, `w` start work |
 
 ### Configuration Options — All Implemented
 
 - `short_break_minutes` (default: 5)
 - `long_break_minutes` (default: 15)
 - `long_break_every` (default: 4)
-- `abandon_threshold_minutes` (default: 5)
-- `break_scrap_threshold_minutes` (default: 2)
-- `decision_window_minutes` (default: 3)
+- `work_default_minutes` (default: 25)
+- `min_work_minutes` (default: 5)
+- `min_break_minutes` (default: 2)
+- `work_decision_minutes` (default: 3)
 - `auto_attach` (default: false)
-- `default_to_overtime` (default: true)
-- `overtime_max_minutes` (default: 60, 0=unlimited)
+- `work_overtime_enabled` (default: true)
+- `work_overtime_max_minutes` (default: 60, 0=unlimited)
+- `break_overtime_contributes` (default: false)
 
 ---
 
@@ -166,7 +167,8 @@ The **persistent engine + ephemeral CLI** pattern is well-suited for this use ca
 - Uses pytest
 - Temporary databases for isolation
 - No mocking (tests use real DB operations)
-- No CI pipeline
+- GitHub Actions CI (runs on Python 3.9 and 3.12, macOS)
+- Ruff for linting and formatting
 
 ---
 
@@ -255,7 +257,6 @@ Hard dependencies on:
 
 ### High Priority
 
-- No CI/CD pipeline
 - No versioned releases
 - No automated security scanning
 
@@ -326,7 +327,7 @@ Tasks to prepare for public release and community contributions.
 
 | Task | Effort | Impact |
 |------|--------|--------|
-| Add CI with GitHub Actions | 0.5 day | High |
+| ~~Add CI with GitHub Actions~~ | ✅ Done | High |
 | Create first versioned release (v1.0.0) | 0.5 day | High |
 | Add engine unit tests | 1-2 days | High |
 | Add issue templates (bug report, feature request) | 0.5 day | Medium |
@@ -398,7 +399,7 @@ Nice-to-have features and broader distribution.
 | Lines of docs | ~1,500 |
 | Unit tests | 5 |
 | Integration tests | 5 |
-| Config options | 9 |
+| Config options | 11 |
 | CLI commands | 8 |
 | Supported platforms | 1 (macOS) |
 | Human-written code | 0% |
@@ -407,7 +408,7 @@ Nice-to-have features and broader distribution.
 
 ## 11. Recommendations for Future Development
 
-1. **Set up GitHub Actions first** — CI is table stakes for open source. Even a simple "run pytest on push" catches issues and signals project health to potential users.
+1. ~~**Set up GitHub Actions first**~~ — Done. CI runs pytest and ruff on push/PR.
 
 2. **Tag a release** — Having `v1.0.0` makes it clear the project is usable. Users can then reference specific versions.
 
