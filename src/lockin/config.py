@@ -5,41 +5,41 @@ from .database import Database
 
 
 DEFAULT_CONFIG = {
-    'short_break_minutes': 5,
-    'long_break_minutes': 15,
-    'long_break_every': 4,  # Long break after every N work sessions
-    'work_default_minutes': 25,  # Default work session duration
-    'min_work_minutes': 5,  # Min work time to log (else scrapped)
-    'min_break_minutes': 2,  # Min break time to log (else scrapped)
-    'work_decision_minutes': 3,  # Decision window after work session completes
-    'auto_attach': False,  # Auto-attach to session after starting
-    'work_overtime_enabled': True,  # Enter overtime when work session ends
-    'work_overtime_max_minutes': 60,  # Max work overtime before auto-end (0 = unlimited)
-    'break_overtime_contributes': False,  # Whether break overtime counts toward logged time
+    "short_break_minutes": 5,
+    "long_break_minutes": 15,
+    "long_break_every": 4,  # Long break after every N work sessions
+    "work_default_minutes": 25,  # Default work session duration
+    "min_work_minutes": 5,  # Min work time to log (else scrapped)
+    "min_break_minutes": 2,  # Min break time to log (else scrapped)
+    "work_decision_minutes": 3,  # Decision window after work session completes
+    "auto_attach": False,  # Auto-attach to session after starting
+    "work_overtime_enabled": True,  # Enter overtime when work session ends
+    "work_overtime_max_minutes": 60,  # Max work overtime before auto-end (0 = unlimited)
+    "break_overtime_contributes": False,  # Whether break overtime counts toward logged time
 }
 
 
 class Config:
     """Configuration manager for Lockin."""
-    
+
     def __init__(self, db: Database):
         self.db = db
         self._ensure_defaults()
-    
+
     def _ensure_defaults(self):
         """Ensure all default config keys exist in database."""
         current_config = self.db.get_all_config()
         for key, value in DEFAULT_CONFIG.items():
             if key not in current_config:
                 self.db.set_config(key, value)
-    
+
     def get(self, key: str, default: Any = None) -> Any:
         """Get a config value."""
         value = self.db.get_config(key)
         if value is None:
             return DEFAULT_CONFIG.get(key, default)
         return value
-    
+
     def set(self, key: str, value: Any):
         """Set a config value."""
         # Validate key exists
@@ -53,9 +53,9 @@ class Config:
             if isinstance(value, bool):
                 pass  # Already a bool
             elif isinstance(value, str):
-                if value.lower() in ('true', '1', 'yes', 'on'):
+                if value.lower() in ("true", "1", "yes", "on"):
                     value = True
-                elif value.lower() in ('false', '0', 'no', 'off'):
+                elif value.lower() in ("false", "0", "no", "off"):
                     value = False
                 else:
                     raise ValueError(f"{key} must be true or false")
@@ -67,79 +67,85 @@ class Config:
             try:
                 num_value = float(value)
                 # work_overtime_max_minutes allows 0 (meaning unlimited)
-                if num_value < 0 or (num_value == 0 and key != 'work_overtime_max_minutes'):
+                if num_value < 0 or (
+                    num_value == 0 and key != "work_overtime_max_minutes"
+                ):
                     raise ValueError(f"{key} must be positive")
 
                 # Set reasonable maximums
-                if key.endswith('_minutes'):
+                if key.endswith("_minutes"):
                     if num_value > 1440:  # 24 hours
                         raise ValueError(f"{key} cannot exceed 1440 minutes (24 hours)")
-                elif key.endswith('_every'):
+                elif key.endswith("_every"):
                     if num_value > 100:
                         raise ValueError(f"{key} cannot exceed 100")
 
-                if key.endswith('_every'):
+                if key.endswith("_every"):
                     value = int(num_value)
                 else:
                     value = num_value
             except (ValueError, TypeError) as e:
-                if "cannot exceed" in str(e) or "must be positive" in str(e) or "Unknown configuration" in str(e):
+                if (
+                    "cannot exceed" in str(e)
+                    or "must be positive" in str(e)
+                    or "Unknown configuration" in str(e)
+                ):
                     raise
                 raise ValueError(f"Invalid value for {key}: {value}")
 
         self.db.set_config(key, value)
-    
+
     def get_all(self) -> Dict[str, Any]:
         """Get all config values (merged with defaults)."""
         config = DEFAULT_CONFIG.copy()
         config.update(self.db.get_all_config())
         return config
-    
+
     def reset(self):
         """Reset all config to defaults."""
         self.db.reset_config()
         self._ensure_defaults()
-    
+
     @property
     def short_break_minutes(self) -> int:
-        return int(self.get('short_break_minutes'))
-    
+        return int(self.get("short_break_minutes"))
+
     @property
     def long_break_minutes(self) -> int:
-        return int(self.get('long_break_minutes'))
-    
+        return int(self.get("long_break_minutes"))
+
     @property
     def long_break_every(self) -> int:
-        return int(self.get('long_break_every'))
+        return int(self.get("long_break_every"))
 
     @property
     def work_default_minutes(self) -> int:
-        return int(self.get('work_default_minutes'))
+        return int(self.get("work_default_minutes"))
 
     @property
     def min_work_minutes(self) -> int:
-        return int(self.get('min_work_minutes'))
+        return int(self.get("min_work_minutes"))
 
     @property
     def min_break_minutes(self) -> int:
-        return int(self.get('min_break_minutes'))
+        return int(self.get("min_break_minutes"))
 
     @property
     def work_decision_minutes(self) -> int:
-        return int(self.get('work_decision_minutes'))
+        return int(self.get("work_decision_minutes"))
 
     @property
     def auto_attach(self) -> bool:
-        return bool(self.get('auto_attach'))
+        return bool(self.get("auto_attach"))
 
     @property
     def work_overtime_enabled(self) -> bool:
-        return bool(self.get('work_overtime_enabled'))
+        return bool(self.get("work_overtime_enabled"))
 
     @property
     def work_overtime_max_minutes(self) -> int:
-        return int(self.get('work_overtime_max_minutes'))
+        return int(self.get("work_overtime_max_minutes"))
 
     @property
     def break_overtime_contributes(self) -> bool:
-        return bool(self.get('break_overtime_contributes'))
+        return bool(self.get("break_overtime_contributes"))
