@@ -96,4 +96,46 @@ sqlite3 ~/.lockin/lockin.db "SELECT * FROM engine_state;"
 [component] Brief description
 ```
 
-Components: `[engine]`, `[cli]`, `[database]`, `[config]`
+Components: `[engine]`, `[cli]`, `[database]`, `[config]`, `[ci]`, `[docs]`
+
+## CI/CD
+
+GitHub Actions runs on every push and PR to `main`.
+
+### What CI checks
+
+1. **Linting** (`ruff check`) - catches code issues
+2. **Formatting** (`ruff format --check`) - ensures consistent style
+3. **Tests** (`pytest tests/`) - runs on Python 3.9 and 3.12 on macOS
+
+### Fixing CI failures
+
+```bash
+# Fix formatting
+uv run ruff format src/ tests/
+
+# Fix linting (auto-fixable issues)
+uv run ruff check --fix src/ tests/
+
+# Run tests locally
+uv run pytest tests/ -v
+```
+
+### Adding new CI checks
+
+Edit `.github/workflows/ci.yml`. Current jobs:
+- `test`: Runs on macOS with Python 3.9/3.12
+- `lint`: Runs on Ubuntu (just checks formatting/linting)
+
+## Releases
+
+**Current version**: Check `pyproject.toml` → `version`
+
+### Creating a release (not yet automated)
+
+1. Update version in `pyproject.toml`
+2. Update `CHANGELOG.md` (move Unreleased items to new version)
+3. Commit: `git commit -m "[docs] Prepare v1.x.x release"`
+4. Tag: `git tag v1.x.x`
+5. Push: `git push && git push --tags`
+6. Create GitHub release from tag

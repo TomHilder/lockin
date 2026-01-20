@@ -115,7 +115,7 @@ The **persistent engine + ephemeral CLI** pattern is well-suited for this use ca
 | README.md | ✅ | Concise, covers all commands |
 | CONTRIBUTING.md | ✅ | Clear dev setup, architecture overview |
 | CLAUDE.md | ✅ | AI assistant context (unique to this project) |
-| CHANGELOG.md | ⚠️ | Stub only ("Unreleased") |
+| CHANGELOG.md | ✅ | Documents 1.0.0 features |
 
 ### Technical Documentation: Excellent
 
@@ -245,7 +245,6 @@ Hard dependencies on:
 
 ### Low Priority
 
-- CHANGELOG.md is a stub
 - Some duplicate code between CLI and engine for break recommendation
 - Magic numbers (60-minute streak gap, 40-char progress bar)
 
@@ -330,10 +329,10 @@ Tasks to prepare for public release and community contributions.
 | ~~Add CI with GitHub Actions~~ | ✅ Done | High |
 | Create first versioned release (v1.0.0) | 0.5 day | High |
 | Add engine unit tests | 1-2 days | High |
-| Add issue templates (bug report, feature request) | 0.5 day | Medium |
-| Populate CHANGELOG.md | 0.5 day | Medium |
-| Document release process in CLAUDE.md | 0.5 day | Medium |
-| Document CI expectations in CLAUDE.md | 0.5 day | Medium |
+| ~~Add issue templates (bug report, feature request)~~ | ✅ Done | Medium |
+| ~~Populate CHANGELOG.md~~ | ✅ Done | Medium |
+| ~~Document release process in CLAUDE.md~~ | ✅ Done | Medium |
+| ~~Document CI expectations in CLAUDE.md~~ | ✅ Done | Medium |
 
 ### Phase 2: Distribution (Medium-High Priority)
 
