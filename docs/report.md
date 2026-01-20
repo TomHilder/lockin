@@ -19,7 +19,6 @@ Lockin is a macOS terminal-based focus timer with a persistent background engine
 **Weaknesses:**
 - Limited test coverage (database only, no CLI/engine tests)
 - macOS-only (uses LaunchAgent and osascript)
-- No versioned releases
 
 ---
 
@@ -256,7 +255,6 @@ Hard dependencies on:
 
 ### High Priority
 
-- No versioned releases
 - No automated security scanning
 
 ---
@@ -327,7 +325,7 @@ Tasks to prepare for public release and community contributions.
 | Task | Effort | Impact |
 |------|--------|--------|
 | ~~Add CI with GitHub Actions~~ | ✅ Done | High |
-| Create first versioned release (v1.0.0) | 0.5 day | High |
+| ~~Create first versioned release (v1.0.0)~~ | ✅ Done | High |
 | Add engine unit tests | 1-2 days | High |
 | ~~Add issue templates (bug report, feature request)~~ | ✅ Done | Medium |
 | ~~Populate CHANGELOG.md~~ | ✅ Done | Medium |
@@ -409,7 +407,7 @@ Nice-to-have features and broader distribution.
 
 1. ~~**Set up GitHub Actions first**~~ — Done. CI runs pytest and ruff on push/PR.
 
-2. **Tag a release** — Having `v1.0.0` makes it clear the project is usable. Users can then reference specific versions.
+2. ~~**Tag a release**~~ — Done. v1.0.0 released.
 
 3. **Write engine tests** — The state machine is the heart of the app. Tests catch regressions and document expected behavior for contributors.
 
