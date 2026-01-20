@@ -14,6 +14,7 @@ DEFAULT_CONFIG = {
     'auto_attach': False,  # Automatically attach to session after starting
     'default_to_overtime': True,  # Enter overtime mode when work session ends
     'overtime_max_minutes': 60,  # Max overtime minutes before auto-end (0 = unlimited)
+    'break_overtime_contributes': False,  # Whether break overtime counts toward logged time
 }
 
 
@@ -133,3 +134,7 @@ class Config:
     @property
     def overtime_max_minutes(self) -> int:
         return int(self.get('overtime_max_minutes'))
+
+    @property
+    def break_overtime_contributes(self) -> bool:
+        return bool(self.get('break_overtime_contributes'))

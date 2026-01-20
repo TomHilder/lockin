@@ -157,17 +157,22 @@ lockin config reset                  # Reset to defaults
 | `long_break_every` | 4 | Long break every N sessions |
 | `abandon_threshold_minutes` | 5 | Min time to log work sessions |
 | `break_scrap_threshold_minutes` | 2 | Min time to log breaks |
-| `decision_window_minutes` | 3 | Time to decide after completion |
+| `decision_window_minutes` | 3 | Time to decide after work session |
 | `auto_attach` | false | Auto-attach after starting session |
-| `default_to_overtime` | true | Enter overtime mode when session ends |
-| `overtime_max_minutes` | 60 | Max overtime before auto-end (0=unlimited) |
+| `default_to_overtime` | true | Enter overtime mode when work session ends |
+| `overtime_max_minutes` | 60 | Max work overtime before auto-end (0=unlimited) |
+| `break_overtime_contributes` | false | Whether break overtime counts toward logged time |
 
 ### Overtime Behavior
 
-When a work session's planned time ends, you enter a decision window where you can quit, take a break, or continue working. If you don't decide within `decision_window_minutes`, the session automatically continues into "overtime" (bonus time).
+**Work sessions:** When planned time ends, you enter a decision window where you can quit, take a break, or continue working. If you don't decide within `decision_window_minutes`, the session automatically continues into "overtime" (bonus time).
 
-- **`default_to_overtime`**: Set to `false` to skip overtime entirely—sessions end and log automatically when time is up.
-- **`overtime_max_minutes`**: Caps how long overtime can last. After this, the session auto-ends. Set to `0` for unlimited overtime.
+- **`default_to_overtime`**: Set to `false` to skip overtime entirely—work sessions end and log automatically when time is up.
+- **`overtime_max_minutes`**: Caps how long work overtime can last. After this, the session auto-ends. Set to `0` for unlimited overtime.
+
+**Breaks:** When planned time ends, a notification fires and the timer shows overtime, but you must manually quit. There's no decision window for breaks.
+
+- **`break_overtime_contributes`**: By default (`false`), break overtime doesn't count—a 5-minute break logs as 5 minutes even if you take 10 minutes to end it. Set to `true` to log actual break time.
 
 ## How It Works
 

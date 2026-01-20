@@ -173,14 +173,16 @@ class Engine:
         
         elif session_type == SessionType.BREAK:
             threshold = self.config.break_scrap_threshold_minutes
-            
-            # Similar logic for breaks
-            if current_state in [SessionState.RUNNING_BONUS, SessionState.AWAITING_DECISION]:
+
+            if current_state == SessionState.RUNNING_BONUS:
                 should_log = True
                 log_state = 'completed'
+                # Cap duration at planned time unless break_overtime_contributes is enabled
+                if not self.config.break_overtime_contributes:
+                    actual_duration_minutes = min(actual_duration_minutes, planned_duration)
             elif actual_duration_minutes >= threshold:
                 should_log = True
-                
+
                 if now >= self.state['planned_end_time']:
                     log_state = 'completed'
                 else:
@@ -281,12 +283,16 @@ class Engine:
                     f"Your {self.state['planned_duration_minutes']} minute {session_type} session is complete!"
                 )
 
-                # For work sessions, check if overtime is enabled
-                if session_type == SessionType.WORK and not self.config.default_to_overtime:
-                    # End session immediately without overtime
+                if session_type == SessionType.BREAK:
+                    # Breaks skip decision window, go straight to overtime
+                    # User must manually quit
+                    self.state['session_state'] = SessionState.RUNNING_BONUS
+                    self._save_state()
+                elif not self.config.default_to_overtime:
+                    # Work session with overtime disabled - end immediately
                     self.quit_session()
                 else:
-                    # Enter decision window
+                    # Work session - enter decision window
                     self.state['session_state'] = SessionState.AWAITING_DECISION
                     self.state['decision_window_start'] = now
                     self._save_state()
@@ -302,17 +308,12 @@ class Engine:
                 self._save_state()
         
         elif self.state['session_state'] == SessionState.RUNNING_BONUS:
-            now = time.time()
-
-            if self.state['session_type'] == SessionType.BREAK:
-                # For breaks, automatically end when long break duration reached
-                elapsed_minutes = (now - self.state['start_time']) / 60
-                if elapsed_minutes >= self.config.long_break_minutes:
-                    self.quit_session()
-            else:
-                # For work sessions, check overtime_max
+            # Breaks stay in RUNNING_BONUS until user manually quits
+            # Work sessions check overtime_max
+            if self.state['session_type'] == SessionType.WORK:
                 overtime_max = self.config.overtime_max_minutes
                 if overtime_max > 0:
+                    now = time.time()
                     overtime_minutes = (now - self.state['planned_end_time']) / 60
                     if overtime_minutes >= overtime_max:
                         self.quit_session()
